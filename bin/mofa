@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+require 'mofa/cli'
+
+begin
+  require 'bundler'
+  Bundler.setup
+rescue LoadError => e
+  # pass
+end
+
+Mofa::CLI.start

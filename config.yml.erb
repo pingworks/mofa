@@ -1,0 +1,33 @@
+# Mofa Global Config
+
+# Admin User Account that should be used for all mofa tasks.
+# The user has to be able to login passwordless
+# and has tohave passwordless sudo permissions.
+ssh_user: <%= conf_ssh_user %>
+ssh_keyfile: <%= conf_ssh_keyfile %>
+
+# A REST-Webservice that returns a list of hosts that are potentially 
+# manageable with this mofa.
+service_hostlist_url: <%= conf_service_hostlist_url %>
+service_hostlist_default_filter: <%= conf_service_hostlist_default_filter %>
+service_hostlist_api_key: <%= conf_service_hostlist_api_key %>
+
+# where to build tmporary cookbook packages and so on
+tmp_dir: <%= conf_tmp_dir %>
+
+# The cookbook architectural pattern should becodified by following
+# a coonaming schema:
+# * Cookbooks beginning with "env_*" are Envrionment Cookbooks
+# * Cookbooks haven a prefix like "<organisation_name>_*" are
+#   so-called Wrapper Cookbooks
+# * Cookbooks having a "base_" Prefix are Base Cookbooks
+
+cookbook_type_indicator:
+  env: "<%= conf_cookbook_type_indicator_env %>"
+  wrapper: "<%= conf_cookbook_type_indicator_wrapper %>"
+  base: "<%= conf_cookbook_type_indicator_base %>"
+
+# Where to find released binary packages of Cookbooks.
+bin_repo: <%= conf_bin_repo %>
+
+conf_version 1.0.0
