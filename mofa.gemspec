@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version = Mofa::VERSION
   s.authors = ["Alexander Birk"]
   s.email = ["birk@pingworks.de"]
-  s.homepage = "https://github.com/birka/mofa"
+  s.homepage = "https://github.com/pingworks/mofa"
   s.summary = %q{a lightweight remote chef-solo runner}
   s.description = %q{a lightweight remote chef-solo runner}
   s.rubyforge_project = "mofa"
