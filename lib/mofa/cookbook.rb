@@ -45,13 +45,14 @@ class Cookbook
     base_indicator = Mofa::Config.config['cookbook_type_indicator']['base']
 
     say "Autodetecting Cookbook Architectural Type... "
+
     case
       when @name.match(env_indicator)
         @type = 'env'
-      when @name.match(wrapper_indicator)
-        @type = 'wrapper'
       when @name.match(base_indicator)
         @type = 'base'
+      when @name.match(wrapper_indicator)
+        @type = 'wrapper'
       else
         @type = 'application'
     end

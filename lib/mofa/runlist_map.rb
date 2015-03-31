@@ -47,7 +47,9 @@ class RunlistMap
 
   def set_default_runlist_for_every_host
     hostlist.list.each do |hostname|
-      @mp.store(hostname, @default_runlist)
+      if cookbook.recipies.include?(@default_runlist.split(/::/)[1])
+        @mp.store(hostname,  @default_runlist)
+      end
     end
   end
 
