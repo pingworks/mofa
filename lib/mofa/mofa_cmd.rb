@@ -6,17 +6,19 @@ class MofaCmd
   attr_accessor :cookbook
   attr_accessor :hostlist
   attr_accessor :runlist_map
+  attr_accessor :attributes_map
 
   def self.generate_token
     Digest::SHA1.hexdigest([Time.now, rand].join)[0..10]
   end
 
-  def self.create(cookbook, hostlist, runlist_map, token)
+  def self.create(cookbook, hostlist, runlist_map, attributes_map, token)
     mofa_cmd = MofaCmd.new
     mofa_cmd.token = token
     mofa_cmd.cookbook = cookbook
     mofa_cmd.hostlist = hostlist
     mofa_cmd.runlist_map = runlist_map
+    mofa_cmd.attributes_map = attributes_map
     mofa_cmd
   end
 
@@ -29,8 +31,10 @@ class MofaCmd
     cookbook.execute
     hostlist.retrieve
     runlist_map.generate
+    attributes_map.generate
 
     puts "Runlist Map: #{runlist_map.mp.inspect}"
+    puts "Attributes Map: #{attributes_map.mp.inspect}"
     puts "Hostlist before runlist filtering: #{hostlist.list.inspect}"
 
     hostlist.filter_by_runlist_map(runlist_map)

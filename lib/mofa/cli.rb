@@ -32,8 +32,9 @@ module Mofa
       hostlist = Hostlist.create(target_filter)
       cookbook = Cookbook.create(cookbook_name_or_path, token)
       runlist_map = RunlistMap.create(cookbook, hostlist, token, options[:runlist])
+      attributes_map = AttributesMap.create(cookbook, hostlist, token, options[:runlist], options[:attributes])
 
-      mofa_cmd = MofaCmd.create(cookbook, hostlist, runlist_map, token)
+      mofa_cmd = MofaCmd.create(cookbook, hostlist, runlist_map, attributes_map, token)
 
 
       mofa_cmd.prepare
