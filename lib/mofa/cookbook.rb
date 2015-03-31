@@ -13,6 +13,7 @@ class Cookbook
   attr_accessor :pkg_uri
   attr_accessor :source_uri
   attr_accessor :cookbooks_url
+  attr_accessor :mofa_yml
   attr_accessor :token
 
   def self.create(cookbook_name_or_path='.', token=nil)
@@ -34,7 +35,7 @@ class Cookbook
     end
     cb.token = token
     cb.autodetect_type
-
+    cb.load_mofa_yml
     cb
 
   end

@@ -41,6 +41,14 @@ class SourceCookbook < Cookbook
     source_uri.gsub(/^file:\/\//, '')
   end
 
+  def load_mofa_yml
+    if File.exist?("#{source_dir}/.mofa.yml")
+      say "Loading .mofa.yml of Sourcecookbook #{@name} (#{source_dir}/.mofa.yml)... "
+      @mofa_yml = YAML.load(File.open("#{source_dir}/.mofa.yml"))
+      ok
+    end
+  end
+
   def autodetect_name
     say "Autodetecting Cookbook Name... "
     @name = open("#{source_dir}/metadata.rb").grep(/^name/)[0].gsub(/^name[^a-zA-Z0-9_-]*/, '').gsub(/.$/, '').chomp
@@ -54,8 +62,8 @@ class SourceCookbook < Cookbook
   end
 
   def recipes
-    recipes = Dir.entries("#{source_dir}/recipes").select {|f| f.match(/.rb$/)}
-    recipes.map! {|f| f.gsub(/\.rb/, '')}
+    recipes = Dir.entries("#{source_dir}/recipes").select { |f| f.match(/.rb$/) }
+    recipes.map! { |f| f.gsub(/\.rb/, '') }
   end
 
   def cleanup!

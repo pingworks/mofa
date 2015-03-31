@@ -36,7 +36,6 @@ module Mofa
 
       mofa_cmd = MofaCmd.create(cookbook, hostlist, runlist_map, attributes_map, token)
 
-
       mofa_cmd.prepare
       mofa_cmd.execute
       mofa_cmd.cleanup
