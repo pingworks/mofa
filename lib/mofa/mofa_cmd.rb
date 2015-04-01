@@ -24,7 +24,6 @@ class MofaCmd
 
   def prepare
     cookbook.prepare
-    fail "Hostlist Service not reachable! (cannot ping #{hostlist.service_url})" unless hostlist.up?
   end
 
   def execute
@@ -91,7 +90,7 @@ class MofaCmd
 
           # remotely create a data_bags folder structure on the target host
           if File.directory?("#{cookbook.source_dir}/data_bags")
-            Dir.entries("#{cookbook.source_dir}/data_bags").select{|f| !f.match(/^\.\.?$/)}.each do |data_bag|
+            Dir.entries("#{cookbook.source_dir}/data_bags").select { |f| !f.match(/^\.\.?$/) }.each do |data_bag|
               puts "Remotely creating data_bags dir \"#{solo_dir}/data_bags/#{data_bag}\""
               out = ssh_exec!(ssh, "[ -d #{solo_dir}/data_bags/#{data_bag} ] || mkdir -p #{solo_dir}/data_bags/#{data_bag}")
               puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
@@ -124,6 +123,9 @@ class MofaCmd
         puts "Remotely creating \"#{solo_dir}/node.json\""
         node_json = {}
         node_json.store('run_list', runlist_map.mp[hostname])
+        attributes_map.mp[hostname].each do |key, value|
+          node_json.store(key, value)
+        end
 
         sftp.file.open("#{solo_dir}/node.json", "w") do |file|
           file.write(JSON.pretty_generate(node_json))
@@ -131,8 +133,8 @@ class MofaCmd
 
         # remotely create data_bag items
         if File.directory?("#{cookbook.source_dir}/data_bags")
-          Dir.entries("#{cookbook.source_dir}/data_bags").select{|f| !f.match(/^\.\.?$/)}.each do |data_bag|
-            Dir.entries("#{cookbook.source_dir}/data_bags/#{data_bag}").select{|f| f.match(/\.json$/)}.each do |data_bag_item|
+          Dir.entries("#{cookbook.source_dir}/data_bags").select { |f| !f.match(/^\.\.?$/) }.each do |data_bag|
+            Dir.entries("#{cookbook.source_dir}/data_bags/#{data_bag}").select { |f| f.match(/\.json$/) }.each do |data_bag_item|
               puts "Uploading data_bag_item #{data_bag_item}... "
               sftp.upload!("#{cookbook.source_dir}/data_bags/#{data_bag}/#{data_bag_item}", "#{solo_dir}/data_bags/#{data_bag}/#{data_bag_item}")
               puts "OK."

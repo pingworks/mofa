@@ -7,6 +7,8 @@ module Mofa
     include Thor::Actions
     include Mofa::Config
 
+    Mofa::Config.load
+
     @@option_verbose = false
     @@option_debug = false
 
@@ -16,8 +18,7 @@ module Mofa
     desc 'provision <cookbook>', 'provisions Targethost(s) using a given cookbook.'
     method_option :target, :type => :string, :aliases => '-t'
     method_option :runlist, :type => :string, :aliases => '-o'
-
-    Mofa::Config.load
+    method_option :service_hostlist_url, :type => :string
 
     def provision(cookbook_name_or_path)
       set_verbosity
@@ -29,13 +30,12 @@ module Mofa
 
       token = MofaCmd.generate_token
 
-      hostlist = Hostlist.create(target_filter)
+      hostlist = Hostlist.create(target_filter, options[:service_hostlist_url])
       cookbook = Cookbook.create(cookbook_name_or_path, token)
       runlist_map = RunlistMap.create(cookbook, hostlist, token, options[:runlist])
       attributes_map = AttributesMap.create(cookbook, hostlist, token, options[:runlist], options[:attributes])
 
       mofa_cmd = MofaCmd.create(cookbook, hostlist, runlist_map, attributes_map, token)
-
       mofa_cmd.prepare
       mofa_cmd.execute
       mofa_cmd.cleanup

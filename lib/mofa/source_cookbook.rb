@@ -42,11 +42,11 @@ class SourceCookbook < Cookbook
   end
 
   def load_mofa_yml
-    if File.exist?("#{source_dir}/.mofa.yml")
-      say "Loading .mofa.yml of Sourcecookbook #{@name} (#{source_dir}/.mofa.yml)... "
-      @mofa_yml = YAML.load(File.open("#{source_dir}/.mofa.yml"))
-      ok
-    end
+    @mofa_yml = MofaYml.load_from_file("#{source_dir}/.mofa.yml", self)
+  end
+
+  def load_mofa_yml_local
+    @mofa_yml_local = MofaYml.load_from_file("#{source_dir}/.mofa.yml.local", self)
   end
 
   def autodetect_name

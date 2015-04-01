@@ -9,21 +9,41 @@ class Hostlist
   attr_accessor :filter
   attr_accessor :api_key
 
-  def self.create(filter = nil)
+  def self.create(filter = nil, service_hostlist_url = nil)
     hl = Hostlist.new
     filter ||= Mofa::Config.config['service_hostlist_default_filter']
+    service_hostlist_url ||= Mofa::Config.config['service_hostlist_url']
     hl.filter = filter
     hl.service_host = Mofa::Config.config['service_hostlist_url'].gsub(/^http:\/\//, '').gsub(/\/.*$/, '').gsub(/:.*$/, '')
-    hl.service_url = Mofa::Config.config['service_hostlist_url']
+    hl.service_url = service_hostlist_url
     hl.api_key = Mofa::Config.config['service_hostlist_api_key']
     hl
   end
 
+  def self.get_shortname(hostname)
+    hostname.gsub(/\..*$/, '')
+  end
+
+  def self.get_role(hostname)
+    Hostlist::get_shortname(hostname).gsub(/\d+$/, '')
+  end
+
   def retrieve
-    fail "Hostlist Service not reachable! (cannot ping #{service_host})" unless up?
-    response = RestClient.get(@service_url, { :params => {:key => api_key}})
-    hosts_list_json = JSON.parse response.body
-    @list = hosts_list_json['data'].collect { |i| i['cname'] }
+    case
+      when @service_url.match(/^http/)
+        fail "Hostlist Service not reachable! (cannot ping #{service_host})" unless up?
+        response = RestClient.get(@service_url, {:params => {:key => api_key}})
+        hosts_list_json = JSON.parse response.body
+        @list = hosts_list_json['data'].collect { |i| i['cname'] }
+      when @service_url.match(/^file:/)
+        json_file = @service_url.gsub(/^file:\/\//, '')
+        if File.exist?(json_file)
+          hosts_list_json = JSON.parse(File.read(json_file))
+          @list = hosts_list_json['data'].collect { |i| i['cname'] }
+        end
+      else
+        fail "Hostlist Service Url either has to be a http(s):// or a file:/// Url!"
+    end
 
     apply_filter
     sort_by_domainname
@@ -43,7 +63,7 @@ class Hostlist
 
     puts "regex=#{regex}"
 
-    @list.select! {|hostname| hostname.match(regex) }
+    @list.select! { |hostname| hostname.match(regex) }
   end
 
   def sort_by_domainname
@@ -55,7 +75,7 @@ class Hostlist
   end
 
   def filter_by_runlist_map(runlist_map)
-    @list.select! { |hostname| runlist_map.mp.key?(hostname)}
+    @list.select! { |hostname| runlist_map.mp.key?(hostname) }
   end
 
 end
