@@ -33,8 +33,6 @@ class MofaYml
     # for now only __ENV_COOKBOOK__ for cookbook name is supported
     file_contents = File.read(path_to_mofayml)
     file_contents.gsub!(/__ENV_COOKBOOK__/, @cookbook.name)
-    puts "FileContents: #{file_contents}"
     @yml = YAML.load(file_contents)
-    puts "Parsed: #{@yml}"
   end
 end

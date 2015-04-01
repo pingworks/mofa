@@ -40,7 +40,10 @@ class Hostlist
         if File.exist?(json_file)
           hosts_list_json = JSON.parse(File.read(json_file))
           @list = hosts_list_json['data'].collect { |i| i['cname'] }
+        else
+          fail "Hostlist JSON-File not found: #{json_file}"
         end
+
       else
         fail "Hostlist Service Url either has to be a http(s):// or a file:/// Url!"
     end
@@ -60,8 +63,6 @@ class Hostlist
     regex = @filter.gsub(/\*/, '__ASTERISK__')
     regex = Regexp.escape(regex).gsub(/__ASTERISK__/, '.*')
     regex = '^' + regex + '$'
-
-    puts "regex=#{regex}"
 
     @list.select! { |hostname| hostname.match(regex) }
   end

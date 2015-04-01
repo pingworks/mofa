@@ -55,6 +55,7 @@ class MofaCmd
 
   def run_chef_solo_on_hosts
     time = Time.new
+    puts
     puts 'Chef-Solo Run started at ' + time.strftime('%Y-%m-%d %H:%M:%S')
     puts "Will use ssh_user #{Mofa::Config.config['ssh_user']} and ssh_key_file #{Mofa::Config.config['ssh_keyfile']}"
     at_least_one_chef_solo_run_failed = false

@@ -31,7 +31,7 @@ class SourceCookbook < Cookbook
   end
 
   def cleanup
-    say "Removing folder #{pkg_dir}...#{nl}"
+    say "Removing folder #{pkg_dir}... "
     run "rm -r #{pkg_dir}"
     ok
   end
@@ -115,7 +115,7 @@ class SourceCookbook < Cookbook
   end
 
   def cleanup_and_repackage
-    say "Shrinking Cookbook Snapshot #{pkg_name}...#{nl}"
+    say "Shrinking Cookbook Snapshot #{pkg_name}... "
 
     tar_verbose = (Mofa::CLI::option_debug) ? 'v' : ''
 
