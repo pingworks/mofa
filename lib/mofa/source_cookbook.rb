@@ -100,7 +100,7 @@ class SourceCookbook < Cookbook
   end
 
   def berks_install_package
-    say "Running \"berks install\" and \”berks package\" on Cookbook in #{source_dir}...#{nl}"
+    say "Running \"berks install\" and \"berks package\" on Cookbook in #{source_dir}...#{nl}"
 
     redirect_stdout = (Mofa::CLI::option_verbose) ? '' : '> /dev/null'
     Bundler.with_clean_env do
