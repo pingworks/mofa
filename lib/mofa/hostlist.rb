@@ -1,5 +1,6 @@
 require 'rest-client'
 require 'net/ping'
+require 'json'
 
 class Hostlist
   attr_accessor :list
