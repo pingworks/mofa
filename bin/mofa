@@ -2,15 +2,4 @@
 
 require 'mofa/cli'
 
-begin
-  require 'bundler'
-  begin
-    Bundler.setup
-  rescue Bundler::GemfileNotFound
-    # pass
-  end
-rescue LoadError => e
-  # pass
-end
-
 Mofa::CLI.start
