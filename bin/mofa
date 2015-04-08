@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'mofa/cli'
+require 'bundler'
 
 Mofa::CLI.start
