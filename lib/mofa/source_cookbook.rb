@@ -1,7 +1,4 @@
 class SourceCookbook < Cookbook
-  attr_accessor :pkg_dir
-  attr_accessor :pkg_name
-
   COOKBOOK_IGNORE=%w(.mofa .idea .kitchen .vagrant .bundle test)
 
   def initialize(cookbook_name_or_path)
@@ -12,6 +9,7 @@ class SourceCookbook < Cookbook
     @source_uri = "file://#{path.realpath}"
 
     say "source_dir=#{source_dir}"
+
     autodetect_name
     autodetect_version
   end
@@ -21,13 +19,14 @@ class SourceCookbook < Cookbook
   def prepare
     fail "Source URI is not a file:// URI!" unless source_uri =~ /^file:\/\/.*/
     fail "Folder #{source_dir} is not a Cookbook Folder!" unless cookbook_folder?(source_dir)
-    @pkg_name = "#{name}-#{token}-SNAPSHOT.tar.gz"
+
+    @pkg_name ||= "#{name}_#{version}-SNAPSHOT.tar.gz"
     @pkg_dir = "#{source_dir}/.mofa/#{token}"
   end
 
   def execute
     package
-    stage
+    set_cookbooks_url
   end
 
   def cleanup
@@ -37,6 +36,7 @@ class SourceCookbook < Cookbook
   end
 
   # ------------- /Interface Methods
+
   def source_dir
     source_uri.gsub(/^file:\/\//, '')
   end
@@ -75,7 +75,7 @@ class SourceCookbook < Cookbook
     end
   end
 
-  def stage
+  def set_cookbooks_url
     if mofahub_available?
       say 'Staging (uploading to mofa-hub) Cookbook Snapshot: '
       @cookbooks_url = upload_to_mofahub
@@ -115,7 +115,7 @@ class SourceCookbook < Cookbook
   end
 
   def cleanup_and_repackage
-    say "Shrinking Cookbook Snapshot #{pkg_name}... "
+    say "Shrinking Cookbook #{pkg_name}... "
 
     tar_verbose = (Mofa::CLI::option_debug) ? 'v' : ''
 

@@ -35,11 +35,35 @@ module Mofa
       runlist_map = RunlistMap.create(cookbook, hostlist, token, options[:runlist])
       attributes_map = AttributesMap.create(cookbook, hostlist, token, options[:runlist], options[:attributes])
 
-      mofa_cmd = MofaCmd.create(cookbook, hostlist, runlist_map, attributes_map, token)
-      mofa_cmd.prepare
-      mofa_cmd.execute
-      mofa_cmd.cleanup
+      cmd = ProvisionCmd.new(token, cookbook)
 
+      cmd.hostlist = hostlist
+      cmd.runlist_map = runlist_map
+      cmd.attributes_map = attributes_map
+
+      cmd.prepare
+      cmd.execute
+      cmd.cleanup
+    end
+
+    desc 'upload <cookbook>', 'package & upload cookbook into binrepo'
+    method_option :binrepo_host, :type => :string
+    method_option :binrepo_ssh_user, :type => :string
+    method_option :binrepo_ssh_keyfile, :type => :string
+
+    def upload(cookbook_path)
+      set_verbosity
+
+      cookbook_path ||= '.'
+
+      token = MofaCmd.generate_token
+      cookbook = Cookbook.create(cookbook_path, token)
+
+      cmd = UploadCmd.new(token, cookbook)
+
+      cmd.prepare
+      cmd.execute
+      cmd.cleanup
     end
 
     desc 'config', 'prints out mofa config.'

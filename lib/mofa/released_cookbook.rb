@@ -1,18 +1,16 @@
 class ReleasedCookbook < Cookbook
-  attr_accessor :pkg_dir
-  attr_accessor :pkg_name
 
   def initialize(cookbook_name_or_path)
     super()
     # TODO: this needs proper vaidation!
-    @name = cookbook_name_or_path.split(/:/).first
-    @version = cookbook_name_or_path.split(/:/).last
+    @name = cookbook_name_or_path.split(/@/).first
+    @version = cookbook_name_or_path.split(/@/).last
   end
 
   # ------------- Interface Methods
 
   def prepare
-    @pkg_name = "#{name}-#{version}.tar.gz"
+    @pkg_name ||= "#{name}_#{version}-full.tar.gz"
     @pkg_dir = "#{Mofa::Config.config['tmp_dir']}/.mofa/#{token}"
   end
 

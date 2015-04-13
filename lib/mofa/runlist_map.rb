@@ -4,14 +4,14 @@ class RunlistMap
   attr_accessor :hostlist
   attr_accessor :token
   attr_accessor :option_runlist
-  attr_accessor :default_runlist
+  attr_accessor :default_runlist_recipes
 
   def self.create(cookbook, hostlist, token, option_runlist = nil)
     rl = RunlistMap.new
     rl.cookbook = cookbook
     rl.hostlist = hostlist
     rl.token = token
-    rl.default_runlist = (!option_runlist.nil?) ? option_runlist : nil
+    rl.default_runlist_recipes = (!option_runlist.nil?) ? option_runlist : nil
     rl
   end
 
@@ -20,7 +20,7 @@ class RunlistMap
   end
 
   def generate
-    @default_runlist ||= "recipe[#{cookbook.name}::default]"
+    @default_runlist_recipes ||= [ "#{cookbook.name}::default" ]
 
     case cookbook.type
       when 'env'
@@ -47,8 +47,10 @@ class RunlistMap
 
   def set_default_runlist_for_every_host
     hostlist.list.each do |hostname|
-      if cookbook.recipies.include?(@default_runlist.split(/::/)[1])
-        @mp.store(hostname,  @default_runlist)
+      puts "Default Runlist Recipes: #{@default_runlist_recipes}"
+      @default_runlist_recipes.each do |rl_entry|
+        next unless rl_entry.split(/::/)[0] == cookbook.name
+        @mp.store(hostname,  @default_runlist) if cookbook.recipes.include?(rl_entry.split(/::/)[1])
       end
     end
   end

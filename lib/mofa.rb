@@ -3,6 +3,8 @@ end
 
 require 'mofa/version'
 require 'mofa/mofa_cmd'
+require 'mofa/provision_cmd'
+require 'mofa/upload_cmd'
 require 'mofa/hostlist'
 require 'mofa/runlist_map'
 require 'mofa/attributes_map'

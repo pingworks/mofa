@@ -10,6 +10,8 @@ class Cookbook
   attr_accessor :name
   attr_accessor :version
   attr_accessor :type
+  attr_accessor :pkg_name
+  attr_accessor :pkg_dir
   attr_accessor :pkg_uri
   attr_accessor :source_uri
   attr_accessor :cookbooks_url
@@ -17,29 +19,28 @@ class Cookbook
   attr_accessor :mofa_yml_local
   attr_accessor :token
 
-  def self.create(cookbook_name_or_path='.', token=nil)
-    cb = nil
+  def self.create(cookbook_name_or_path, token)
+    cookbook = nil
     begin
       case
-        when cookbook_name_or_path.match(/:/)
+        when cookbook_name_or_path.match(/@/)
           fail "Did not find released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path)
           fail "Did not find Version #{cookbook_version} of released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path, cookbook_version)
 
-          cb = ReleasedCookbook.new(cookbook_name_or_path)
+          cookbook = ReleasedCookbook.new(cookbook_name_or_path)
 
         else
-          cb = SourceCookbook.new(cookbook_name_or_path)
+          cookbook = SourceCookbook.new(cookbook_name_or_path)
       end
     rescue RuntimeError => e
       error e.message
       raise "Cookbook not found/detected!"
     end
-    cb.token = token
-    cb.autodetect_type
-    cb.load_mofa_yml
-    cb.load_mofa_yml_local
-    cb
-
+    cookbook.token = token
+    cookbook.autodetect_type
+    cookbook.load_mofa_yml
+    cookbook.load_mofa_yml_local
+    cookbook
   end
 
   def autodetect_type
