@@ -66,6 +66,12 @@ module Mofa
       cmd.cleanup
     end
 
+    desc 'version', 'prints out mofa version.'
+
+    def version
+      puts VERSION
+    end
+
     desc 'config', 'prints out mofa config.'
 
     def config
