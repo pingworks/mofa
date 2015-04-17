@@ -68,7 +68,7 @@ class UploadCmd < MofaCmd
                      :port => Mofa::Config.config['binrepo_ssh_port'],
                      :verbose => :error,
                      :use_agent => false) do |ssh|
-        out = ssh_exec!(ssh, "[ -f #{import_dir}/#{cookbook.name}/#{cookbook.version}/#{cookbook.pkg_name} ] || echo -n already_exists")
+        out = ssh_exec!(ssh, "if [ -f #{import_dir}/#{cookbook.pkg_name} ];then echo -n already_exists;fi")
         fail "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
         already_uploaded = true if out[1] == 'already_exists'
       end
