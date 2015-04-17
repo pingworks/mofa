@@ -40,36 +40,53 @@ class UploadCmd < MofaCmd
 
   def upload_cookbook_pkg
     puts "Will use ssh_user #{Mofa::Config.config['binrepo_ssh_user']} and ssh_key_file #{Mofa::Config.config['binrepo_ssh_keyfile']}"
-    puts "Uploading cookbook pkg #{cookbook.pkg_name} to binrepo import folder #{Mofa::Config.config['binrepo_host']}:#{Mofa::Config.config['binrepo_import_dir']}..."
 
     fail unless binrepo_up?
     import_dir = Mofa::Config.config['binrepo_import_dir']
 
-    # if the upload target is not a proper binrepo with a designated ".../import" folder -> create the "right" folder structure
-    unless Mofa::Config.config['binrepo_import_dir'].match(/import$/)
+    begin
+      # if the upload target is not a proper binrepo with a designated ".../import" folder -> create the "right" folder structure
+      unless Mofa::Config.config['binrepo_import_dir'].match(/import$/)
+        Net::SSH.start(Mofa::Config.config['binrepo_host'],
+                       Mofa::Config.config['binrepo_ssh_user'],
+                       :keys => [Mofa::Config.config['binrepo_ssh_keyfile']],
+                       :port => Mofa::Config.config['binrepo_ssh_port'],
+                       :verbose => :error,
+                       :use_agent => false) do |ssh|
+          puts "Remotely creating target dir \"#{import_dir}/#{cookbook.name}/#{cookbook.version}\""
+          out = ssh_exec!(ssh, "[ -d #{import_dir}/#{cookbook.name}/#{cookbook.version} ] || mkdir -p #{import_dir}/#{cookbook.name}/#{cookbook.version}")
+          fail "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          import_dir = "#{import_dir}/#{cookbook.name}/#{cookbook.version}"
+        end
+      end
+
+      # only upload if the file does not exist on the target host:
+      already_uploaded = false
       Net::SSH.start(Mofa::Config.config['binrepo_host'],
                      Mofa::Config.config['binrepo_ssh_user'],
                      :keys => [Mofa::Config.config['binrepo_ssh_keyfile']],
                      :port => Mofa::Config.config['binrepo_ssh_port'],
                      :verbose => :error,
                      :use_agent => false) do |ssh|
-        puts "Remotely creating target dir \"#{import_dir}/#{cookbook.name}/#{cookbook.version}\""
-        out = ssh_exec!(ssh, "[ -d #{import_dir}/#{cookbook.name}/#{cookbook.version} ] || mkdir -p #{import_dir}/#{cookbook.name}/#{cookbook.version}")
+        out = ssh_exec!(ssh, "[ -f #{import_dir}/#{cookbook.name}/#{cookbook.version}/#{cookbook.pkg_name} ] || echo -n already_exists")
         fail "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-        import_dir = "#{import_dir}/#{cookbook.name}/#{cookbook.version}"
+        already_uploaded = true if out[1] == 'already_exists'
       end
-    end
 
-    begin
-      Net::SFTP.start(Mofa::Config.config['binrepo_host'],
-                      Mofa::Config.config['binrepo_ssh_user'],
-                      :keys => [Mofa::Config.config['binrepo_ssh_keyfile']],
-                      :port => Mofa::Config.config['binrepo_ssh_port'],
-                      :verbose => :error,
-                      :use_agent => false) do |sftp|
-        sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{import_dir}/#{cookbook.pkg_name}")
+      unless already_uploaded
+        puts "Uploading cookbook pkg #{cookbook.pkg_name} to binrepo import folder #{Mofa::Config.config['binrepo_host']}:#{Mofa::Config.config['binrepo_import_dir']}..."
+        Net::SFTP.start(Mofa::Config.config['binrepo_host'],
+                        Mofa::Config.config['binrepo_ssh_user'],
+                        :keys => [Mofa::Config.config['binrepo_ssh_keyfile']],
+                        :port => Mofa::Config.config['binrepo_ssh_port'],
+                        :verbose => :error,
+                        :use_agent => false) do |sftp|
+          sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{import_dir}/#{cookbook.pkg_name}")
+        end
+        puts "OK."
+      else
+        puts "Cookbook pkg #{cookbook.pkg_name} already exists in the binrepo. Will NOT upload it again."
       end
-      puts "OK."
     rescue RuntimeError => e
       puts "Error: #{e.message}"
       raise "Failed to upload cookbook #{cookbook.name}!"
