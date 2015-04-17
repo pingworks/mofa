@@ -43,16 +43,26 @@ class UploadCmd < MofaCmd
     puts "Uploading cookbook pkg #{cookbook.pkg_name} to binrepo import folder #{Mofa::Config.config['binrepo_host']}:#{Mofa::Config.config['binrepo_import_dir']}..."
 
     fail unless binrepo_up?
+    import_dir = Mofa::Config.config['binrepo_import_dir']
+
+    # if the upload target is not a proper binrepo with a designated ".../import" folder -> create the "right" folder structure
+    unless Mofa::Config.config['binrepo_import_dir'].match(/import$/)
+      Net::SSH.start(Mofa::Config.config['binrepo_host'], Mofa::Config.config['binrepo_ssh_user'], :keys => [Mofa::Config.config['binrepo_ssh_keyfile']], :port => Mofa::Config.config['binrepo_ssh_port'], :verbose => :error) do |ssh|
+        puts "Remotely creating target dir \"#{import_dir}/#{cookbook.name}/#{cookbook.version}\""
+        out = ssh_exec!(ssh, "[ -d #{import_dir}/#{cookbook.name}/#{cookbook.version} ] || mkdir -p #{import_dir}/#{cookbook.name}/#{cookbook.version}")
+        fail "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+        import_dir = "#{import_dir}/#{cookbook.name}/#{cookbook.version}"
+      end
+    end
+
     begin
       Net::SFTP.start(Mofa::Config.config['binrepo_host'], Mofa::Config.config['binrepo_ssh_user'], :keys => [Mofa::Config.config['binrepo_ssh_keyfile']], :port => Mofa::Config.config['binrepo_ssh_port'], :verbose => :error) do |sftp|
-        sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{Mofa::Config.config['binrepo_import_dir']}/#{cookbook.pkg_name}")
+        sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{import_dir}/#{cookbook.pkg_name}")
       end
       puts "OK."
     rescue RuntimeError => e
       puts "Error: #{e.message}"
       raise "Failed to upload cookbook #{cookbook.name}!"
     end
-
   end
-
 end
