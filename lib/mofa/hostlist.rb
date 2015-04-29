@@ -48,7 +48,6 @@ class Hostlist
       else
         fail "Hostlist Service Url either has to be a http(s):// or a file:/// Url!"
     end
-
     apply_filter
     sort_by_domainname
   end
@@ -60,11 +59,15 @@ class Hostlist
   end
 
   def apply_filter
-    # building matcher
-    regex = @filter.gsub(/\*/, '__ASTERISK__')
-    regex = Regexp.escape(regex).gsub(/__ASTERISK__/, '.*')
-    regex = '^' + regex + '$'
 
+    if @filter[0] == '/' && @filter[-1] == '/' && @filter.length > 2
+      regex = @filter[1..-2]
+    else
+      # building matcher
+      regex = @filter.gsub(/\*/, '__ASTERISK__')
+      regex = Regexp.escape(regex).gsub(/__ASTERISK__/, '.*')
+      regex = '^' + regex + '$'
+    end
     @list.select! { |hostname| hostname.match(regex) }
   end
 
