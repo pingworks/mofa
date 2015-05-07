@@ -47,10 +47,9 @@ class RunlistMap
 
   def set_default_runlist_for_every_host
     hostlist.list.each do |hostname|
-      puts "Default Runlist Recipes: #{@default_runlist_recipes}"
       @default_runlist_recipes.each do |rl_entry|
         next unless rl_entry.split(/::/)[0] == cookbook.name
-        @mp.store(hostname,  @default_runlist) if cookbook.recipes.include?(rl_entry.split(/::/)[1])
+        @mp.store(hostname,  rl_entry) if cookbook.recipes.include?(rl_entry.split(/::/)[1])
       end
     end
   end
