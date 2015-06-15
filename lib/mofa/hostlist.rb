@@ -33,7 +33,7 @@ class Hostlist
     case
       when @service_url.match(/^http/)
         fail "Hostlist Service not reachable! (cannot ping #{service_host})" unless up?
-        response = RestClient.get(@service_url, {:params => {:key => api_key}})
+        response = RestClient.get(@service_url, {params: {key: api_key}})
         hosts_list_json = JSON.parse response.body
         @list = hosts_list_json['data'].collect { |i| i['cname'] }
       when @service_url.match(/^file:/)

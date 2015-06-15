@@ -11,7 +11,7 @@ class ReleasedCookbook < Cookbook
 
   def prepare
     @pkg_name ||= "#{name}_#{version}-full.tar.gz"
-    @pkg_dir = "#{Mofa::Config.config['tmp_dir']}/.mofa/#{token}"
+    @pkg_dir = "#{Mofa::Config.config['tmp_dir']}/#{name}/#{version}/.mofa/#{token}"
   end
 
   def execute
@@ -26,6 +26,13 @@ class ReleasedCookbook < Cookbook
   end
 
   # ------------- /Interface Methods
+
+  def download_and_unpack
+    unless File.exist?("#{Mofa::Config.config['tmp_dir']}/#{name}/#{version}/metadata.rb")
+      #binrepo_base_url
+
+    end
+  end
 
   def cleanup!
     unless (Dir.entries("#{Mofa::Config.config['tmp_dir']}/.mofa") - %w{ . .. }).empty?

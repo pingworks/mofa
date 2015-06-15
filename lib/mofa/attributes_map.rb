@@ -27,13 +27,13 @@ class AttributesMap
 
     hostlist.list.each do |hostname|
       # Again: the underlying rule here is -> shortname = role
-      attr_host_role = cookbook.mofa_yml.get_attr_for_role(Hostlist::get_role(hostname))
-      attr_host_role_local = cookbook.mofa_yml_local.get_attr_for_role(Hostlist::get_role(hostname))
+      attr_host_role = cookbook.mofa_yml.get_attr_for_role(Hostlist.get_role(hostname))
+      attr_host_role_local = cookbook.mofa_yml_local.get_attr_for_role(Hostlist.get_role(hostname))
 
       attr_host_role = deep_merge(attr_host_role, attr_host_role_local)
       attr_per_host = deep_merge(attr_all_roles, attr_host_role)
 
-      attr_per_host = deep_parse(attr_per_host, '__SHORTNAME__', Hostlist::get_shortname(hostname))
+      attr_per_host = deep_parse(attr_per_host, '__SHORTNAME__', Hostlist.get_shortname(hostname))
 
       @mp.store(hostname, attr_per_host)
     end
@@ -54,19 +54,17 @@ class AttributesMap
   def deep_merge(attr_hash, attr_hash_local)
     new_attr_hash = Marshal.load(Marshal.dump(attr_hash))
     attr_hash.each do |key, value|
-      if attr_hash_local.key?(key)
-        if value.is_a?(Hash) && attr_hash_local[key].is_a?(Hash)
-          new_attr_hash[key] = deep_merge(value, attr_hash_local[key])
-        else
-          new_attr_hash[key] = attr_hash_local[key]
-        end
+      next unless attr_hash_local.key?(key)
+      if value.is_a?(Hash) && attr_hash_local[key].is_a?(Hash)
+        new_attr_hash[key] = deep_merge(value, attr_hash_local[key])
+      else
+        new_attr_hash[key] = attr_hash_local[key]
       end
     end
+
     # and now add all attributes that are in attr_hash_local but not in attr_hash
     attr_hash_local.each do |key, value|
-      unless attr_hash.key?(key)
-        new_attr_hash.store(key, value)
-      end
+      new_attr_hash.store(key, value) unless attr_hash.key?(key)
     end
 
     new_attr_hash

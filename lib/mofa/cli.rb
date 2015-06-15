@@ -3,6 +3,7 @@ require 'thor'
 require 'yaml'
 
 module Mofa
+  # rubocop:disable ClassLength
   class CLI < Thor
     include Thor::Actions
     include Mofa::Config
@@ -12,13 +13,13 @@ module Mofa
     @@option_verbose = false
     @@option_debug = false
 
-    class_option :verbose, :type => :boolean, :aliases => '-v', :desc => 'be verbose'
-    class_option :debug, :type => :boolean, :aliases => '-vv', :desc => 'be very vebose'
+    class_option :verbose, type: :boolean, aliases: '-v', desc: 'be verbose'
+    class_option :debug, type: :boolean, aliases: '-vv', desc: 'be very vebose'
 
     desc 'provision <cookbook>', 'provisions Targethost(s) using a given cookbook.'
-    method_option :target, :type => :string, :aliases => '-t'
-    method_option :runlist, :type => :string, :aliases => '-o'
-    method_option :service_hostlist_url, :type => :string
+    method_option :target, type: :string, aliases: '-t'
+    method_option :runlist, type: :string, aliases: '-o'
+    method_option :service_hostlist_url, type: :string
 
     def provision(cookbook_name_or_path)
       set_verbosity
@@ -47,9 +48,9 @@ module Mofa
     end
 
     desc 'upload <cookbook>', 'package & upload cookbook into binrepo'
-    method_option :binrepo_host, :type => :string
-    method_option :binrepo_ssh_user, :type => :string
-    method_option :binrepo_ssh_keyfile, :type => :string
+    method_option :binrepo_host, type: :string
+    method_option :binrepo_ssh_user, type: :string
+    method_option :binrepo_ssh_keyfile, type: :string
 
     def upload(cookbook_path)
       set_verbosity
@@ -65,6 +66,9 @@ module Mofa
       cmd.execute
       cmd.cleanup
     end
+
+    desc "binrepo SUBCOMMAND ...ARGS", "manage binrepo"
+    subcommand "binrepo", Binrepo
 
     desc 'version', 'prints out mofa version.'
 
@@ -84,14 +88,14 @@ module Mofa
       set_verbosity
 
       case
-        when !File.exists?("#{ENV['HOME']}/.mofa/config.yml")
-          begin
-            config_create
-          end until config_valid?
-        else
-          begin
-            config_edit
-          end until config_valid?
+      when !File.exist?("#{ENV['HOME']}/.mofa/config.yml")
+        begin
+          config_create
+        end until config_valid?
+      else
+        begin
+          config_edit
+        end until config_valid?
       end
     end
 

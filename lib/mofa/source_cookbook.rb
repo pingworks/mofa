@@ -87,7 +87,7 @@ class SourceCookbook < Cookbook
   end
 
   def cookbook_folder?(source_dir)
-    File.exist?(source_dir) && File.exists?("#{source_dir}/metadata.rb") && File.exists?("#{source_dir}/recipes")
+    File.exist?(source_dir) && File.exist?("#{source_dir}/metadata.rb") && File.exist?("#{source_dir}/recipes")
   end
 
   def mofahub_available?
@@ -125,7 +125,7 @@ class SourceCookbook < Cookbook
       run "tar x#{tar_verbose}fz #{pkg_dir}/#{pkg_name} -C #{pkg_dir}/tmp/"
 
       COOKBOOK_IGNORE.each do |remove_this|
-        if File.exists?("#{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}")
+        if File.exist?("#{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}")
           run "rm -r #{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}"
         end
       end

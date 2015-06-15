@@ -9,9 +9,9 @@ class MofaCmd
     Digest::SHA1.hexdigest([Time.now, rand].join)[0..10]
   end
 
-  def initialize(token, cookbook)
-    @token = token
-    @cookbook = cookbook
+  def initialize(token = nil, cookbook = nil)
+    @token = token if token
+    @cookbook = cookbook if cookbook
   end
 
   # @abstract
@@ -58,6 +58,19 @@ class MofaCmd
     end
     ssh.loop
     [exit_code, stdout_data, stderr_data, exit_signal]
+  end
+
+  def binrepo_up?
+    binrepo_up = true
+    exit_status = system("ping -q -c 1 #{Mofa::Config.config['binrepo_host']} >/dev/null 2>&1")
+    unless exit_status then
+      puts "  --> Binrepo host #{Mofa::Config.config['binrepo_host']} is unavailable!"
+      binrepo_up = false
+    end
+
+    puts "Binrepo #{ Mofa::Config.config['binrepo_ssh_user']}@#{Mofa::Config.config['binrepo_host']}:#{Mofa::Config.config['binrepo_import_dir']} not present or not reachable!" unless binrepo_up
+    binrepo_up
+
   end
 
 end

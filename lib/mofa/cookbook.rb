@@ -23,14 +23,13 @@ class Cookbook
     cookbook = nil
     begin
       case
-        when cookbook_name_or_path.match(/@/)
-          fail "Did not find released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path)
-          fail "Did not find Version #{cookbook_version} of released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path, cookbook_version)
+      when cookbook_name_or_path.match(/@/)
+        fail "Did not find released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path)
+        fail "Did not find Version #{cookbook_version} of released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path, cookbook_version)
 
-          cookbook = ReleasedCookbook.new(cookbook_name_or_path)
-
-        else
-          cookbook = SourceCookbook.new(cookbook_name_or_path)
+        cookbook = ReleasedCookbook.new(cookbook_name_or_path)
+      else
+        cookbook = SourceCookbook.new(cookbook_name_or_path)
       end
     rescue RuntimeError => e
       error e.message
@@ -84,7 +83,7 @@ class Cookbook
     args = args.empty? ? {} : args.pop
     verbose = (Mofa::CLI::option_debug) ? true : false
     #verbose = !!(options[:verbose] && options[:verbose].to_s.match(/(verbose|true|t|yes|y|1)$/i))
-    exit_code = super(cmd, args.merge(:verbose => verbose))
+    exit_code = super(cmd, args.merge(verbose: verbose))
     fail "Failed to run #{cmd.inspect}!" unless exit_code == true
   end
 

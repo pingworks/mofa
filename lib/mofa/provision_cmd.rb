@@ -69,7 +69,7 @@ class ProvisionCmd < MofaCmd
         prerequesits_met = true
         # Create a temp working dir on the target host
         solo_dir = '/var/tmp/' + time.strftime('%Y-%m-%d_%H%M%S')
-        Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], :keys => [Mofa::Config.config['ssh_keyfile']], :port => Mofa::Config.config['ssh_port'], :verbose => :error) do |ssh|
+        Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], verbose: :error) do |ssh|
           puts "Remotely creating solo_dir \"#{solo_dir}\" on host #{hostname}"
           # remotely create the temp folder
           out = ssh_exec!(ssh, "[ -d #{solo_dir} ] || mkdir #{solo_dir}")
@@ -90,7 +90,7 @@ class ProvisionCmd < MofaCmd
       next unless prerequesits_met
 
 
-      Net::SFTP.start(hostname, Mofa::Config.config['ssh_user'], :keys => [Mofa::Config.config['ssh_keyfile']], :port =>  Mofa::Config.config['ssh_port'], :verbose => :error) do |sftp|
+      Net::SFTP.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port:  Mofa::Config.config['ssh_port'], verbose: :error) do |sftp|
 
         # remotely creating solo.rb
         puts "Remotely creating \"#{solo_dir}/solo.rb\""
@@ -136,7 +136,7 @@ class ProvisionCmd < MofaCmd
         end
 
         # Do it -> Execute the chef-solo run!
-        Net::SSH.start(hostname, Mofa::Config::config['ssh_user'], :keys => [Mofa::Config::config['ssh_keyfile']], :port =>  Mofa::Config.config['ssh_port'], :verbose => :error) do |ssh|
+        Net::SSH.start(hostname, Mofa::Config::config['ssh_user'], keys: [Mofa::Config::config['ssh_keyfile']], port:  Mofa::Config.config['ssh_port'], verbose: :error) do |ssh|
 
           if cookbook.instance_of?(SourceCookbook)
             puts "Remotely unpacking Snapshot Package #{cookbook.pkg_name}... "
