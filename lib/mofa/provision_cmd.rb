@@ -120,7 +120,7 @@ class ProvisionCmd < MofaCmd
 
         # remotely create data_bag items
         if File.directory?("#{cookbook.source_dir}/data_bags")
-          Dir.entries("#{cookbook.source_dir}/data_bags").select { |f| !f.match(/^\.\.?$/) }.each do |data_bag|
+          Dir.entries("#{cookbook.source_dir}/data_bags").select { |f| File.directory?(f) && !f.match(/^\.\.?$/) }.each do |data_bag|
             Dir.entries("#{cookbook.source_dir}/data_bags/#{data_bag}").select { |f| f.match(/\.json$/) }.each do |data_bag_item|
               puts "Uploading data_bag_item #{data_bag_item}... "
               sftp.upload!("#{cookbook.source_dir}/data_bags/#{data_bag}/#{data_bag_item}", "#{solo_dir}/data_bags/#{data_bag}/#{data_bag_item}")
