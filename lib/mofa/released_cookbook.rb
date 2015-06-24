@@ -17,6 +17,8 @@ class ReleasedCookbook < Cookbook
   def execute
     # TODO: Download & unpack released cookbook
     # Important for guessing role runlists (when cookbook is an env-cookbook)
+
+
   end
 
   def cleanup
@@ -29,8 +31,22 @@ class ReleasedCookbook < Cookbook
 
   def download_and_unpack
     unless File.exist?("#{Mofa::Config.config['tmp_dir']}/#{name}/#{version}/metadata.rb")
-      #binrepo_base_url
+      fail unless binrepo_up?
+      begin
+        Net::SFTP.start(Mofa::Config.config['binrepo_host'],
+                        Mofa::Config.config['binrepo_ssh_user'],
+                        keys: [Mofa::Config.config['binrepo_ssh_keyfile']],
+                        port: Mofa::Config.config['binrepo_ssh_port'],
+                        verbose: :error) do |sftp|
 
+          sftp.download!("#{Mofa::Config.config['binrepo_dir']}/#{name}/#{version}/#{@pkg_name}", "#{Mofa::Config.config['tmp_dir']}")
+
+
+        end
+      rescue RuntimeError => e
+        puts "Error: #{e.message}"
+        raise "Failed to download cookbook #{name}!"
+      end
     end
   end
 
