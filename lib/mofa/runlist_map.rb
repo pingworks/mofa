@@ -21,6 +21,7 @@ class RunlistMap
 
   def generate
     @default_runlist_recipes ||= [ "#{cookbook.name}::default" ]
+    @default_runlist_recipes = [ "#{@default_runlist_recipes}" ] unless @default_runlist_recipes.kind_of?(Array)
 
     case cookbook.type
       when 'env'
