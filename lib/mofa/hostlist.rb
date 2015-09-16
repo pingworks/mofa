@@ -7,17 +7,18 @@ class Hostlist
   attr_accessor :filter
   attr_accessor :service_host
   attr_accessor :service_url
-  attr_accessor :filter
   attr_accessor :api_key
+  attr_accessor :concrete_target
 
-  def self.create(filter = nil, service_hostlist_url = nil)
+  def self.create(filter = nil, service_hostlist_url = nil, concrete_target = nil)
     hl = Hostlist.new
-    filter ||= Mofa::Config.config['service_hostlist_default_filter']
+    filter = Mofa::Config.config['service_hostlist_default_filter'] if concrete_target.nil? && filter.nil?
     service_hostlist_url ||= Mofa::Config.config['service_hostlist_url']
     hl.filter = filter
     hl.service_host = Mofa::Config.config['service_hostlist_url'].gsub(/^http:\/\//, '').gsub(/\/.*$/, '').gsub(/:.*$/, '')
     hl.service_url = service_hostlist_url
     hl.api_key = Mofa::Config.config['service_hostlist_api_key']
+    hl.concrete_target = concrete_target
     hl
   end
 
@@ -29,8 +30,14 @@ class Hostlist
     Hostlist::get_shortname(hostname).gsub(/\d+$/, '')
   end
 
+  def has_concrete_target
+    return (@concrete_target.nil?) ? false : true
+  end
+
   def retrieve
     case
+      when has_concrete_target
+        @list = [@concrete_target]
       when @service_url.match(/^http/)
         fail "Hostlist Service not reachable! (cannot ping #{service_host})" unless up?
         response = RestClient.get(@service_url, {:params => {:key => api_key}})
@@ -59,16 +66,17 @@ class Hostlist
   end
 
   def apply_filter
-
-    if @filter[0] == '/' && @filter[-1] == '/' && @filter.length > 2
-      regex = @filter[1..-2]
-    else
-      # building matcher
-      regex = @filter.gsub(/\*/, '__ASTERISK__')
-      regex = Regexp.escape(regex).gsub(/__ASTERISK__/, '.*')
-      regex = '^' + regex + '$'
+    unless @filter.nil?
+      if @filter[0] == '/' && @filter[-1] == '/' && @filter.length > 2
+        regex = @filter[1..-2]
+      else
+        # building matcher
+        regex = @filter.gsub(/\*/, '__ASTERISK__')
+        regex = Regexp.escape(regex).gsub(/__ASTERISK__/, '.*')
+        regex = '^' + regex + '$'
+      end
+      @list.select! { |hostname| hostname.match(regex) }
     end
-    @list.select! { |hostname| hostname.match(regex) }
   end
 
   def sort_by_domainname

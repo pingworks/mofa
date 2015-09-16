@@ -17,6 +17,7 @@ module Mofa
 
     desc 'provision <cookbook>', 'provisions Targethost(s) using a given cookbook.'
     method_option :target, :type => :string, :aliases => '-t'
+    method_option :concrete_target, :type => :string, :aliases => '-T'
     method_option :runlist, :type => :string, :aliases => '-o'
     method_option :service_hostlist_url, :type => :string
 
@@ -26,11 +27,11 @@ module Mofa
       cookbook_name_or_path ||= '.'
 
       target_filter = options[:target]
-      target_filter ||= Mofa::Config.config['profiles']['default']['target']
+      #target_filter ||= Mofa::Config.config['profiles']['default']['target']
 
       token = MofaCmd.generate_token
 
-      hostlist = Hostlist.create(target_filter, options[:service_hostlist_url])
+      hostlist = Hostlist.create(target_filter, options[:service_hostlist_url], options[:concrete_target])
       cookbook = Cookbook.create(cookbook_name_or_path, token)
       runlist_map = RunlistMap.create(cookbook, hostlist, token, options[:runlist])
       attributes_map = AttributesMap.create(cookbook, hostlist, token, options[:runlist], options[:attributes])
