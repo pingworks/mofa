@@ -199,6 +199,10 @@ class ProvisionCmd < MofaCmd
     end
 
     puts "Exiting with exit code #{exit_code}."
+
+    if exit_code != 0
+      raise Thor::Error, "Chef client exited with non zero exit code: #{exit_code}"
+    end
     exit_code
 
   end
