@@ -133,7 +133,7 @@ class SourceCookbook < Cookbook
       run "cd #{pkg_dir}/tmp/;tar c#{tar_verbose}fz #{pkg_dir}/#{pkg_name}.new ."
       run "rm #{pkg_dir}/#{pkg_name}"
       run "mv #{pkg_dir}/#{pkg_name}.new #{pkg_dir}/#{pkg_name}"
-      run "rm -r #{pkg_dir}/tmp/"
+      run "rm -rf #{pkg_dir}/tmp/"
 
     end
 
