@@ -1,5 +1,5 @@
 class SourceCookbook < Cookbook
-  COOKBOOK_IGNORE=%w(.mofa .idea .kitchen .vagrant .bundle test)
+  COOKBOOK_IGNORE=%w(.mofa .idea .kitchen .vagrant .bundle test .git)
 
   def initialize(cookbook_name_or_path)
     super()
@@ -126,7 +126,7 @@ class SourceCookbook < Cookbook
 
       COOKBOOK_IGNORE.each do |remove_this|
         if File.exists?("#{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}")
-          run "rm -r #{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}"
+          run "rm -rf #{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}"
         end
       end
 
