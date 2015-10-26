@@ -29,13 +29,25 @@ class ReleasedCookbook < Cookbook
     set_cookbooks_url
   end
 
-  def execute
+  def execute#
+    package
   end
 
   def cleanup
     say "Removing folder #{pkg_dir}...#{nl}"
     run "rm -rf #{pkg_dir}"
     ok
+  end
+
+  def package
+    mkdir_p @pkg_dir
+    say "Downloading released cookbook from: #{cookbooks_url} to #{pkg_dir}/#{pkg_name}..."
+    File.open("#{pkg_dir}/#{pkg_name}", "wb") do |saved_file|
+      # the following "open" is provided by open-uri
+      open(cookbooks_url, "rb") do |read_file|
+        saved_file.write(read_file.read)
+      end
+    end
   end
 
   def load_mofa_yml

@@ -86,7 +86,7 @@ class ProvisionCmd < MofaCmd
         EOF
       else
         solo_rb = <<-"EOF"
-    recipe_url "#{cookbook.cookbooks_url}"
+    recipe_url "#{solo_dir}/#{cookbook.pkg_name}"
         EOF
       end
       solo_rb += <<-"EOF"
@@ -151,11 +151,9 @@ class ProvisionCmd < MofaCmd
         # remotely create data_bag items
         create_data_bags(sftp, hostname, solo_dir)
 
-        if cookbook.instance_of?(SourceCookbook)
-          puts "Cookbook is a SourceCookbook! Uploading Snapshot Package #{cookbook.pkg_name}... "
-          sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{solo_dir}/#{cookbook.pkg_name}")
-          puts "OK."
-        end
+        puts "Uploading Package #{cookbook.pkg_name}... "
+        sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{solo_dir}/#{cookbook.pkg_name}")
+        puts "OK."
 
         # Do it -> Execute the chef-solo run!
         Net::SSH.start(hostname, Mofa::Config::config['ssh_user'], :keys => [Mofa::Config::config['ssh_keyfile']], :port =>  Mofa::Config.config['ssh_port'], :verbose => :error) do |ssh|
