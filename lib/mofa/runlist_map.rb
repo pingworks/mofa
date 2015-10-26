@@ -11,6 +11,7 @@ class RunlistMap
     rl.cookbook = cookbook
     rl.hostlist = hostlist
     rl.token = token
+    rl.option_runlist = option_runlist
     rl.default_runlist_recipes = (!option_runlist.nil?) ? option_runlist : nil
     rl
   end
@@ -50,7 +51,11 @@ class RunlistMap
     hostlist.list.each do |hostname|
       @default_runlist_recipes.each do |rl_entry|
         next unless rl_entry.split(/::/)[0] == cookbook.name
-        @mp.store(hostname,  rl_entry) if cookbook.recipes.include?(rl_entry.split(/::/)[1])
+        if option_runlist.nil?
+          @mp.store(hostname,  rl_entry) if cookbook.recipes.kind_of?(Array) and cookbook.recipes.include?(rl_entry.split(/::/)[1])
+        else
+          @mp.store(hostname,  option_runlist)
+        end
       end
     end
   end
