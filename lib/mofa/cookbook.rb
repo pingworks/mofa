@@ -25,7 +25,6 @@ class Cookbook
       case
         when cookbook_name_or_path.match(/@/)
           fail "Did not find released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path)
-          fail "Did not find Version #{cookbook_version} of released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path, cookbook_version)
 
           cookbook = ReleasedCookbook.new(cookbook_name_or_path)
 
@@ -33,7 +32,7 @@ class Cookbook
           cookbook = SourceCookbook.new(cookbook_name_or_path)
       end
     rescue RuntimeError => e
-      error e.message
+      say e.message
       raise "Cookbook not found/detected!"
     end
     cookbook.token = token

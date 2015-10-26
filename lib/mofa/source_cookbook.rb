@@ -22,11 +22,11 @@ class SourceCookbook < Cookbook
 
     @pkg_name ||= "#{name}_#{version}-SNAPSHOT.tar.gz"
     @pkg_dir = "#{source_dir}/.mofa/#{token}"
+    set_cookbooks_url
   end
 
   def execute
     package
-    set_cookbooks_url
   end
 
   def cleanup
