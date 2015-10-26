@@ -24,11 +24,17 @@ class RunlistMap
     @default_runlist_recipes ||= [ "#{cookbook.name}::default" ]
     @default_runlist_recipes = [ "#{@default_runlist_recipes}" ] unless @default_runlist_recipes.kind_of?(Array)
 
-    case cookbook.type
-      when 'env'
-        guess_runlists_by_hostnames
-      else
-        set_default_runlist_for_every_host
+    if option_runlist.nil?
+      case cookbook.type
+        when 'env'
+          guess_runlists_by_hostnames
+        else
+          set_default_runlist_for_every_host
+      end
+    else
+      hostlist.list.each do |hostname|
+        @mp.store(hostname,  option_runlist)
+      end
     end
   end
 
@@ -51,11 +57,7 @@ class RunlistMap
     hostlist.list.each do |hostname|
       @default_runlist_recipes.each do |rl_entry|
         next unless rl_entry.split(/::/)[0] == cookbook.name
-        if option_runlist.nil?
-          @mp.store(hostname,  rl_entry) if cookbook.recipes.kind_of?(Array) and cookbook.recipes.include?(rl_entry.split(/::/)[1])
-        else
-          @mp.store(hostname,  option_runlist)
-        end
+        @mp.store(hostname,  rl_entry) if cookbook.recipes.kind_of?(Array) and cookbook.recipes.include?(rl_entry.split(/::/)[1])
       end
     end
   end
