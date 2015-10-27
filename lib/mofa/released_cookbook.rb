@@ -40,6 +40,9 @@ class ReleasedCookbook < Cookbook
   end
 
   def package
+
+    tar_verbose = (Mofa::CLI::option_debug) ? 'v' : ''
+
     mkdir_p @pkg_dir
     say "Downloading released cookbook from: #{cookbooks_url} to #{pkg_dir}/#{pkg_name}..."
     File.open("#{pkg_dir}/#{pkg_name}", "wb") do |saved_file|
@@ -48,6 +51,8 @@ class ReleasedCookbook < Cookbook
         saved_file.write(read_file.read)
       end
     end
+    mkdir_p "#{pkg_dir}/tmp"
+    run "tar x#{tar_verbose}fz #{pkg_dir}/#{pkg_name} -C #{pkg_dir}/tmp/"
   end
 
   def load_mofa_yml
@@ -76,7 +81,9 @@ class ReleasedCookbook < Cookbook
   end
 
   def recipes
-    []
+    raise 'Cookbook not unpacked yet or no recipes found.' unless (Dir.exists?("#{pkg_dir}/tmp/cookbooks/#{name}/recipes"))
+    recipes = Dir.entries("#{pkg_dir}/tmp/cookbooks/#{name}/recipes").select { |f| f.match(/.rb$/) }
+    recipes.map! { |f| f.gsub(/\.rb/, '') }
   end
 
   private

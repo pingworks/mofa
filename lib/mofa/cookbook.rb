@@ -32,8 +32,7 @@ class Cookbook
           cookbook = SourceCookbook.new(cookbook_name_or_path)
       end
     rescue RuntimeError => e
-      say e.message
-      raise "Cookbook not found/detected!"
+      raise "Cookbook not found/detected: " + e.message
     end
     cookbook.token = token
     cookbook.autodetect_type
