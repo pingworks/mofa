@@ -19,6 +19,7 @@ module Mofa
     method_option :target, :type => :string, :aliases => '-t'
     method_option :concrete_target, :type => :string, :aliases => '-T'
     method_option :runlist, :type => :string, :aliases => '-o'
+    method_option :attributes, :type => :string, :aliases => '-j'
     method_option :service_hostlist_url, :type => :string
 
     def provision(cookbook_name_or_path)

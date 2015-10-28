@@ -12,7 +12,7 @@ class AttributesMap
     a.hostlist = hostlist
     a.token = token
     a.option_runlist = option_runlist
-    a.option_attributes = option_attributes
+    a.option_attributes = JSON.parse(option_attributes)
     a
   end
 
@@ -21,7 +21,7 @@ class AttributesMap
   end
 
   def generate
-    attr_all_roles = cookbook.mofa_yml.get_attr_for_role('all')
+    attr_all_roles = deep_merge(option_attributes, cookbook.mofa_yml.get_attr_for_role('all'))
     attr_all_roles_local = cookbook.mofa_yml_local.get_attr_for_role('all')
     attr_all_roles = deep_merge(attr_all_roles, attr_all_roles_local)
 
