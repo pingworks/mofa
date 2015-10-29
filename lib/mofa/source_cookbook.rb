@@ -21,7 +21,7 @@ class SourceCookbook < Cookbook
     fail "Folder #{source_dir} is not a Cookbook Folder!" unless cookbook_folder?(source_dir)
 
     @pkg_name ||= "#{name}_#{version}-SNAPSHOT.tar.gz"
-    @pkg_dir = "#{source_dir}/.mofa/#{token}"
+    @pkg_dir = "#{Mofa::Config.config['tmp_dir']}/.mofa/#{token}"
     set_cookbooks_url
   end
 
@@ -42,11 +42,11 @@ class SourceCookbook < Cookbook
   end
 
   def load_mofa_yml
-    @mofa_yml = MofaYml.load_from_file("#{source_dir}/.mofa.yml", self)
+    @mofa_yml = MofaYml.load_from_file("#{Mofa::Config.config['tmp_dir']}/.mofa.yml", self)
   end
 
   def load_mofa_yml_local
-    @mofa_yml_local = MofaYml.load_from_file("#{source_dir}/.mofa.local.yml", self)
+    @mofa_yml_local = MofaYml.load_from_file("#{Mofa::Config.config['tmp_dir']}/.mofa.local.yml", self)
   end
 
   def autodetect_name
@@ -67,11 +67,11 @@ class SourceCookbook < Cookbook
   end
 
   def cleanup!
-    unless (Dir.entries("#{source_dir}/.mofa") - %w{ . .. }).empty?
-      say "Removing content of folder #{source_dir}/.mofa"
-      run "rm -r #{source_dir}/.mofa/*"
+    unless (Dir.entries("#{Mofa::Config.config['tmp_dir']}/.mofa") - %w{ . .. }).empty?
+      say "Removing content of folder #{Mofa::Config.config['tmp_dir']}/.mofa"
+      run "rm -r #{Mofa::Config.config['tmp_dir']}/.mofa/*"
     else
-      say "Folder #{source_dir}/.mofa is (already) clean."
+      say "Folder #{Mofa::Config.config['tmp_dir']}/.mofa is (already) clean."
     end
   end
 
