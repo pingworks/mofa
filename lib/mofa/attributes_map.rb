@@ -12,7 +12,7 @@ class AttributesMap
     a.hostlist = hostlist
     a.token = token
     a.option_runlist = option_runlist
-    a.option_attributes = JSON.parse(option_attributes)
+    a.option_attributes = option_attributes.nil? ? {} : JSON.parse(option_attributes)
     a
   end
 
