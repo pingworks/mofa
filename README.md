@@ -49,6 +49,12 @@ Before you can start using mofa please create a config file:
 
     EOF
 
+# local Development
 
-
-
+    $ git clone https://github.com/hybris/mofa.git
+    $ cd mofa
+    $ bundle install
+    $ cd ../somewhere_chef-env_some_cookbook
+    $ export BUNDLE_GEMFILE=../mofa/Gemfile
+    $ bundle exec
+    $ ../mofa/bin/mofa provision .
