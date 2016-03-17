@@ -18,7 +18,8 @@ Before you can start using mofa please create a config file:
     # A REST-Webservice that returns a list of hosts that are potentially
     # manageable with this mofa.
     #service_hostlist_url: http://a-real-server:9292/hosts
-    service_hostlist_url: file:///Users/<yourname>/workspaces/mofa/example_hostlist.json
+    # You can also have a json-file somewhere. See the test-file in the rspec-folder
+    service_hostlist_url: file:///Users/<yourname>/.mofa/example_hostlist.json
     service_hostlist_default_filter: "localhost"
     service_hostlist_api_key: <a api key used to access the above service>
 
