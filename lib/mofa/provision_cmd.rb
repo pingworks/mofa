@@ -114,8 +114,11 @@ class ProvisionCmd < MofaCmd
   end
 
   def create_data_bags(sftp, hostname, solo_dir)
+    puts "Remotely creating data_bags items..."
     if cookbook.instance_of?(SourceCookbook) and File.directory?("#{cookbook.source_dir}/data_bags")
-      Dir.entries("#{cookbook.source_dir}/data_bags").select { |f| File.directory?(f) && !f.match(/^\.\.?$/) }.each do |data_bag|
+      Dir.entries("#{cookbook.source_dir}/data_bags/").each do |data_bag|
+        next if data_bag =~ /^\.\.?$/
+        puts "Found data_bag #{data_bag}... "
         Dir.entries("#{cookbook.source_dir}/data_bags/#{data_bag}").select { |f| f.match(/\.json$/) }.each do |data_bag_item|
           puts "Uploading data_bag_item #{data_bag_item}... "
           sftp.upload!("#{cookbook.source_dir}/data_bags/#{data_bag}/#{data_bag_item}", "#{solo_dir}/data_bags/#{data_bag}/#{data_bag_item}")
@@ -150,7 +153,7 @@ class ProvisionCmd < MofaCmd
 
         # remotely create data_bag items
         create_data_bags(sftp, hostname, solo_dir)
-
+        exit
         puts "Uploading Package #{cookbook.pkg_name}... "
         sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{solo_dir}/#{cookbook.pkg_name}")
         puts "OK."
