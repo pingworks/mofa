@@ -153,7 +153,7 @@ class ProvisionCmd < MofaCmd
 
         # remotely create data_bag items
         create_data_bags(sftp, hostname, solo_dir)
-        exit
+
         puts "Uploading Package #{cookbook.pkg_name}... "
         sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{solo_dir}/#{cookbook.pkg_name}")
         puts "OK."
