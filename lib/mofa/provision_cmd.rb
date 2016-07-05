@@ -196,7 +196,11 @@ class ProvisionCmd < MofaCmd
           end
           out = ssh_exec!(ssh, "sudo chown -R #{Mofa::Config.config['ssh_user']}.#{Mofa::Config.config['ssh_user']} #{solo_dir}")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "sudo mkdir -p /var/lib/mofa && sudo ln -s #{solo_dir} /var/lib/mofa/last_run && sudo echo #{cookbook.pkg_name} > /var/lib/mofa/last_cookbook && sudo echo #{chef_solo_runs[hostname]['status']} > /var/lib/mofa/last_status")
+          out = ssh_exec!(ssh, "sudo mkdir -p /var/lib/mofa && sudo ln -s #{solo_dir} /var/lib/mofa/last_run")
+          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          out = ssh_exec!(ssh, "echo #{cookbook.pkg_name} | sudo tee /var/lib/mofa/last_cookbook")
+          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          out = ssh_exec!(ssh, "echo #{chef_solo_runs[hostname]['status']}| sudo tee /var/lib/mofa/last_status")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
         end
       end
