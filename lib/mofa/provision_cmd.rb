@@ -202,6 +202,8 @@ class ProvisionCmd < MofaCmd
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "echo #{chef_solo_runs[hostname]['status']}| sudo tee /var/lib/mofa/last_status")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          out = ssh_exec!(ssh, "echo '#!/bin/bash' | sudo tee /usr/bin/mofalog && echo 'cat /var/lib/mofa/last_run' | sudo tee -a /usr/bin/mofalog && sudo chmod 755 /usr/bin/mofalog")
+          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
         end
       end
       at_least_one_chef_solo_run_failed = true if chef_solo_runs[hostname]['status'] == 'FAIL'
