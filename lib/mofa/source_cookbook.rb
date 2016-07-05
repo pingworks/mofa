@@ -42,11 +42,11 @@ class SourceCookbook < Cookbook
   end
 
   def load_mofa_yml
-    @mofa_yml = MofaYml.load_from_file("#{Mofa::Config.config['tmp_dir']}/.mofa.yml", self)
+    @mofa_yml = MofaYml.load_from_file("#{source_dir}/.mofa.yml", self)
   end
 
   def load_mofa_yml_local
-    @mofa_yml_local = MofaYml.load_from_file("#{Mofa::Config.config['tmp_dir']}/.mofa.local.yml", self)
+    @mofa_yml_local = MofaYml.load_from_file("#{source_dir}/.mofa.local.yml", self)
   end
 
   def autodetect_name
