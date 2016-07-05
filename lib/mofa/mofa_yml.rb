@@ -9,6 +9,7 @@ class MofaYml
   def self.load_from_file(path_to_mofayml, cookbook)
     mfyml = MofaYml.new
     mfyml.cookbook = cookbook
+    puts "Loading .mofa.yml/.mofa.local.yml from path #{path_to_mofayml}..."
     if File.exist?(path_to_mofayml)
       mfyml.parse_and_load(path_to_mofayml)
     end
@@ -34,5 +35,8 @@ class MofaYml
     file_contents = File.read(path_to_mofayml)
     file_contents.gsub!(/__ENV_COOKBOOK__/, @cookbook.name)
     @yml = YAML.load(file_contents)
+    puts "YAML is now:"
+    puts @yml.inspect
+    @yml
   end
 end
