@@ -53,8 +53,6 @@ class ProvisionCmd < MofaCmd
     exit_status = system("ping -q -c 1 #{hostname} >/dev/null 2>&1")
     unless exit_status then
       puts "  --> Host #{hostname} is unavailable!"
-      chef_solo_runs[hostname].store('status', 'UNAVAIL')
-      chef_solo_runs[hostname].store('status_msg', "Host #{hostname} unreachable.")
     else
       puts "  --> Host #{hostname} is available."
       prerequesits_met = true
@@ -140,8 +138,12 @@ class ProvisionCmd < MofaCmd
     host_index = 0
     hostlist.list.each do |hostname|
       host_index = host_index + 1
-      next unless prepare_host(hostname, host_index, solo_dir)
       chef_solo_runs.store(hostname, {})
+      unless prepare_host(hostname, host_index, solo_dir)
+        chef_solo_runs[hostname].store('status', 'UNAVAIL')
+        chef_solo_runs[hostname].store('status_msg', "Host #{hostname} unreachable.")
+        next
+      end
 
       Net::SFTP.start(hostname, Mofa::Config.config['ssh_user'], :keys => [Mofa::Config.config['ssh_keyfile']], :port =>  Mofa::Config.config['ssh_port'], :verbose => :error) do |sftp|
 
