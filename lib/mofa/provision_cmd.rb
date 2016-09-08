@@ -208,7 +208,7 @@ class ProvisionCmd < MofaCmd
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
         end
       end
-      at_least_one_chef_solo_run_failed = true if chef_solo_runs[hostname]['status'] == 'FAIL'
+      at_least_one_chef_solo_run_failed = true if chef_solo_runs[hostname]['status'] != 'SUCCESS'
     end
 
     # ------- print out report
