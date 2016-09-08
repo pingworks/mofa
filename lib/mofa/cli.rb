@@ -16,6 +16,7 @@ module Mofa
     class_option :debug, :type => :boolean, :aliases => '-vv', :desc => 'be very vebose'
 
     desc 'provision <cookbook>', 'provisions Targethost(s) using a given cookbook.'
+    method_option :ignore_ping, :type => :boolean, :aliases => '-p'
     method_option :target, :type => :string, :aliases => '-t'
     method_option :concrete_target, :type => :string, :aliases => '-T'
     method_option :runlist, :type => :string, :aliases => '-o'
@@ -42,6 +43,7 @@ module Mofa
       cmd.hostlist = hostlist
       cmd.runlist_map = runlist_map
       cmd.attributes_map = attributes_map
+      cmd.options = options
 
       cmd.prepare
       cmd.execute

@@ -4,6 +4,7 @@ require 'net/sftp'
 class MofaCmd
   attr_accessor :token
   attr_accessor :cookbook
+  attr_accessor :options
 
   def self.generate_token
     Digest::SHA1.hexdigest([Time.now, rand].join)[0..10]
@@ -61,4 +62,3 @@ class MofaCmd
   end
 
 end
-
