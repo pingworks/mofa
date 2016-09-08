@@ -42,37 +42,39 @@ class ProvisionCmd < MofaCmd
   # This Code is Copy'n'Pasted from the old mofa tooling. Only to make the MVP work in time!!
   # This needs to be refactored ASAP.
 
+  def host_avail?(hostname)
+    host_available = false
+    puts "Pinging host #{hostname}..."
+    exit_status = system("ping -q -c 1 #{hostname} >/dev/null 2>&1")
+    if exit_status
+      puts "  --> Host #{hostname} is available."
+      host_available = true
+    else
+      puts "  --> Host #{hostname} is unavailable!"
+    end
+    host_available
+  end
+
   def prepare_host(hostname, host_index, solo_dir)
-    prerequesits_met = false
     puts
     puts "----------------------------------------------------------------------"
     puts "Chef-Solo on Host #{hostname} (#{host_index}/#{hostlist.list.length.to_s})"
     puts "----------------------------------------------------------------------"
+    Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], :keys => [Mofa::Config.config['ssh_keyfile']], :port => Mofa::Config.config['ssh_port'], :verbose => :error) do |ssh|
+      puts "Remotely creating solo_dir \"#{solo_dir}\" on host #{hostname}"
+      # remotely create the temp folder
+      out = ssh_exec!(ssh, "[ -d #{solo_dir} ] || mkdir #{solo_dir}")
+      puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
 
-    puts "Pinging host #{hostname}..."
-    exit_status = system("ping -q -c 1 #{hostname} >/dev/null 2>&1")
-    unless exit_status then
-      puts "  --> Host #{hostname} is unavailable!"
-    else
-      puts "  --> Host #{hostname} is available."
-      prerequesits_met = true
-      Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], :keys => [Mofa::Config.config['ssh_keyfile']], :port => Mofa::Config.config['ssh_port'], :verbose => :error) do |ssh|
-        puts "Remotely creating solo_dir \"#{solo_dir}\" on host #{hostname}"
-        # remotely create the temp folder
-        out = ssh_exec!(ssh, "[ -d #{solo_dir} ] || mkdir #{solo_dir}")
-        puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-
-        # remotely create a data_bags folder structure on the target host
-        if cookbook.instance_of?(SourceCookbook) and File.directory?("#{cookbook.source_dir}/data_bags")
-          Dir.entries("#{cookbook.source_dir}/data_bags").select { |f| !f.match(/^\.\.?$/) }.each do |data_bag|
-            puts "Remotely creating data_bags dir \"#{solo_dir}/data_bags/#{data_bag}\""
-            out = ssh_exec!(ssh, "[ -d #{solo_dir}/data_bags/#{data_bag} ] || mkdir -p #{solo_dir}/data_bags/#{data_bag}")
-            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          end
+      # remotely create a data_bags folder structure on the target host
+      if cookbook.instance_of?(SourceCookbook) and File.directory?("#{cookbook.source_dir}/data_bags")
+        Dir.entries("#{cookbook.source_dir}/data_bags").select { |f| !f.match(/^\.\.?$/) }.each do |data_bag|
+          puts "Remotely creating data_bags dir \"#{solo_dir}/data_bags/#{data_bag}\""
+          out = ssh_exec!(ssh, "[ -d #{solo_dir}/data_bags/#{data_bag} ] || mkdir -p #{solo_dir}/data_bags/#{data_bag}")
+          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
         end
       end
     end
-    prerequesits_met
   end
 
   def create_solo_rb(sftp, hostname, solo_dir)
@@ -139,11 +141,14 @@ class ProvisionCmd < MofaCmd
     hostlist.list.each do |hostname|
       host_index = host_index + 1
       chef_solo_runs.store(hostname, {})
-      unless prepare_host(hostname, host_index, solo_dir)
+
+      unless host_avail?(hostname)
         chef_solo_runs[hostname].store('status', 'UNAVAIL')
         chef_solo_runs[hostname].store('status_msg', "Host #{hostname} unreachable.")
         next
       end
+
+      prepare_host(hostname, host_index, solo_dir)
 
       Net::SFTP.start(hostname, Mofa::Config.config['ssh_user'], :keys => [Mofa::Config.config['ssh_keyfile']], :port =>  Mofa::Config.config['ssh_port'], :verbose => :error) do |sftp|
 
