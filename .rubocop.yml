@@ -1,0 +1,5 @@
+Metrics/LineLength:
+  Enabled: false
+
+Style/Encoding:
+  Enabled: false

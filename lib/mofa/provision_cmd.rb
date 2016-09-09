@@ -143,11 +143,13 @@ class ProvisionCmd < MofaCmd
       host_index = host_index + 1
       chef_solo_runs.store(hostname, {})
 
-      if options[:ignore_ping] == false && host_avail?(hostname) == false
-        chef_solo_runs[hostname].store('status', 'UNAVAIL')
-        chef_solo_runs[hostname].store('status_msg', "Host #{hostname} unreachable.")
-        at_least_one_chef_solo_run_failed = true
-        next
+      unless (options.key?('ignore_ping') && options[:ignore_ping] == true)
+        unless host_avail?(hostname)
+          chef_solo_runs[hostname].store('status', 'UNAVAIL')
+          chef_solo_runs[hostname].store('status_msg', "Host #{hostname} unreachable.")
+          at_least_one_chef_solo_run_failed = true
+          next
+        end
       end
 
       prepare_host(hostname, host_index, solo_dir)
