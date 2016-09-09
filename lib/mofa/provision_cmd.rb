@@ -145,6 +145,7 @@ class ProvisionCmd < MofaCmd
       if host_avail?(hostname) == false || options[:ignore_ping] == true
         chef_solo_runs[hostname].store('status', 'UNAVAIL')
         chef_solo_runs[hostname].store('status_msg', "Host #{hostname} unreachable.")
+        at_least_one_chef_solo_run_failed = true
         next
       end
 
@@ -213,7 +214,7 @@ class ProvisionCmd < MofaCmd
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
         end
       end
-      at_least_one_chef_solo_run_failed = true if chef_solo_runs[hostname]['status'] != 'SUCCESS'
+      at_least_one_chef_solo_run_failed = true unless chef_solo_runs[hostname]['status'] == 'SUCCESS'
     end
 
     # ------- print out report
