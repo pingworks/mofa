@@ -24,6 +24,7 @@ class ProvisionCmd < MofaCmd
     puts "Runlist Map: #{runlist_map.mp.inspect}"
     puts "Attributes Map: #{attributes_map.mp.inspect}"
     puts "Hostlist before runlist filtering: #{hostlist.list.inspect}"
+    puts "Options: #{options.inspect}"
 
     hostlist.filter_by_runlist_map(runlist_map)
 
@@ -142,7 +143,7 @@ class ProvisionCmd < MofaCmd
       host_index = host_index + 1
       chef_solo_runs.store(hostname, {})
 
-      if host_avail?(hostname) == false || options[:ignore_ping] == true
+      if options[:ignore_ping] == false && host_avail?(hostname) == false
         chef_solo_runs[hostname].store('status', 'UNAVAIL')
         chef_solo_runs[hostname].store('status_msg', "Host #{hostname} unreachable.")
         at_least_one_chef_solo_run_failed = true
