@@ -65,6 +65,10 @@ class ReleasedCookbook < Cookbook
 
   # ------------- /Interface Methods
 
+  def source_dir
+    pkg_dir
+  end
+
   def cleanup!
     unless (Dir.entries("#{Mofa::Config.config['tmp_dir']}/.mofa") - %w{ . .. }).empty?
       say "Removing content of folder #{Mofa::Config.config['tmp_dir']}/.mofa"

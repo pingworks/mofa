@@ -68,7 +68,7 @@ class ProvisionCmd < MofaCmd
       puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
 
       # remotely create a data_bags folder structure on the target host
-      if cookbook.instance_of?(SourceCookbook) and File.directory?("#{cookbook.source_dir}/data_bags")
+      if File.directory?("#{cookbook.source_dir}/data_bags")
         Dir.entries("#{cookbook.source_dir}/data_bags").select { |f| !f.match(/^\.\.?$/) }.each do |data_bag|
           puts "Remotely creating data_bags dir \"#{solo_dir}/data_bags/#{data_bag}\""
           out = ssh_exec!(ssh, "[ -d #{solo_dir}/data_bags/#{data_bag} ] || mkdir -p #{solo_dir}/data_bags/#{data_bag}")
@@ -81,15 +81,7 @@ class ProvisionCmd < MofaCmd
   def create_solo_rb(sftp, hostname, solo_dir)
     puts "Remotely creating \"#{solo_dir}/solo.rb\""
     sftp.file.open("#{solo_dir}/solo.rb", "w") do |file|
-      if cookbook.instance_of?(SourceCookbook)
-        solo_rb = <<-"EOF"
-    cookbook_path [ "#{solo_dir}/cookbooks" ]
-        EOF
-      else
-        solo_rb = <<-"EOF"
-    recipe_url "#{solo_dir}/#{cookbook.pkg_name}"
-        EOF
-      end
+      cookbook_path [ "#{solo_dir}/cookbooks" ]
       solo_rb += <<-"EOF"
     data_bag_path "#{solo_dir}/data_bags"
     log_level :info
@@ -116,7 +108,7 @@ class ProvisionCmd < MofaCmd
 
   def create_data_bags(sftp, hostname, solo_dir)
     puts "Remotely creating data_bags items..."
-    if cookbook.instance_of?(SourceCookbook) and File.directory?("#{cookbook.source_dir}/data_bags")
+    if File.directory?("#{cookbook.source_dir}/data_bags")
       Dir.entries("#{cookbook.source_dir}/data_bags/").each do |data_bag|
         next if data_bag =~ /^\.\.?$/
         puts "Found data_bag #{data_bag}... "
@@ -172,15 +164,13 @@ class ProvisionCmd < MofaCmd
         # Do it -> Execute the chef-solo run!
         Net::SSH.start(hostname, Mofa::Config::config['ssh_user'], :keys => [Mofa::Config::config['ssh_keyfile']], :port =>  Mofa::Config.config['ssh_port'], :verbose => :error) do |ssh|
 
-          if cookbook.instance_of?(SourceCookbook)
-            puts "Remotely unpacking Snapshot Package #{cookbook.pkg_name}... "
-            out = ssh_exec!(ssh, "cd #{solo_dir}; tar xvfz #{cookbook.pkg_name}")
-            if out[0] != 0
-              puts "ERROR (#{out[0]}): #{out[2]}"
-              puts out[1]
-            else
-              puts "OK."
-            end
+          puts "Remotely unpacking Cookbook Package #{cookbook.pkg_name}... "
+          out = ssh_exec!(ssh, "cd #{solo_dir}; tar xvfz #{cookbook.pkg_name}")
+          if out[0] != 0
+            puts "ERROR (#{out[0]}): #{out[2]}"
+            puts out[1]
+          else
+            puts "OK."
           end
 
           puts "Remotely running chef-solo -c #{solo_dir}/solo.rb -j #{solo_dir}/node.json"
