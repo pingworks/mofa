@@ -76,7 +76,7 @@ class ReleasedCookbook < Cookbook
 
   def set_cookbooks_url
     say 'Using remote URI as cookbooks_url: '
-    @cookbooks_url = "#{Mofa::Config.config['bin_repo']}/#{@name}/#{@version}/#{@name}_#{@version}-full.tar.gz"
+    @cookbooks_url = "#{Mofa::Config.config['binrepo_base_url']}/#{@name}/#{@version}/#{@name}_#{@version}-full.tar.gz"
     say "#{@cookbooks_url}"
   end
 
