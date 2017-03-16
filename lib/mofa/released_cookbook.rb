@@ -97,8 +97,8 @@ class ReleasedCookbook < Cookbook
   end
 
   def recipes
-    raise 'Cookbook not unpacked yet or no recipes found.' unless (Dir.exists?("#{pkg_dir}/tmp/cookbooks/#{name}/recipes"))
-    recipes = Dir.entries("#{pkg_dir}/tmp/cookbooks/#{name}/recipes").select { |f| f.match(/.rb$/) }
+    raise 'Cookbook not unpacked yet or no recipes found.' unless (Dir.exists?("#{pkg_dir}/recipes"))
+    recipes = Dir.entries("#{pkg_dir}/recipes").select { |f| f.match(/.rb$/) }
     recipes.map! { |f| f.gsub(/\.rb/, '') }
   end
 
