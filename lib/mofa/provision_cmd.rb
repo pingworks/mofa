@@ -83,9 +83,6 @@ class ProvisionCmd < MofaCmd
     sftp.file.open("#{solo_dir}/solo.rb", "w") do |file|
       solo_rb = <<-"EOF"
     cookbook_path [ "#{solo_dir}/cookbooks" ]
-        EOF
-
-      solo_rb += <<-"EOF"
     data_bag_path "#{solo_dir}/data_bags"
     log_level :info
     log_location "#{solo_dir}/log"
