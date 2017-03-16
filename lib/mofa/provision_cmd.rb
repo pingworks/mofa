@@ -81,7 +81,10 @@ class ProvisionCmd < MofaCmd
   def create_solo_rb(sftp, hostname, solo_dir)
     puts "Remotely creating \"#{solo_dir}/solo.rb\""
     sftp.file.open("#{solo_dir}/solo.rb", "w") do |file|
-      cookbook_path [ "#{solo_dir}/cookbooks" ]
+      solo_rb = <<-"EOF"
+    cookbook_path [ "#{solo_dir}/cookbooks" ]
+        EOF
+
       solo_rb += <<-"EOF"
     data_bag_path "#{solo_dir}/data_bags"
     log_level :info
