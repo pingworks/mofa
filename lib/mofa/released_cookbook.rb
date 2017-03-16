@@ -52,10 +52,9 @@ class ReleasedCookbook < Cookbook
     mkdir_p "#{pkg_dir}/tmp"
     run "tar x#{tar_verbose}fz #{pkg_dir}/#{pkg_name} -C #{pkg_dir}/tmp/"
 
-    COOKBOOK_IGNORE.each do |remove_this|
-      if File.exists?("#{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}")
-        run "rm -rf #{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}"
-      end
+    # copy out data_bags if exists
+    if File.directory?("#{pkg_dir}/tmp/#{name}/data_bags")
+      FileUtils.cp_r "#{pkg_dir}/tmp/#{name}/data_bags", pkg_dir
     end
 
     run "cd #{pkg_dir}/tmp/;tar c#{tar_verbose}fz #{pkg_dir}/#{pkg_name}.new ."
