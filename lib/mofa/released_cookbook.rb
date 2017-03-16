@@ -53,8 +53,13 @@ class ReleasedCookbook < Cookbook
     run "tar x#{tar_verbose}fz #{pkg_dir}/#{pkg_name} -C #{pkg_dir}/tmp/"
 
     # copy out data_bags if exists
-    if File.directory?("#{pkg_dir}/tmp/#{name}/data_bags")
-      FileUtils.cp_r "#{pkg_dir}/tmp/#{name}/data_bags", pkg_dir
+    if File.directory?("#{pkg_dir}/tmp/cookbooks/#{name}/data_bags")
+      FileUtils.cp_r "#{pkg_dir}/tmp/cookbooks/#{name}/data_bags", pkg_dir
+    end
+
+    # copy out recipes
+    if File.directory?("#{pkg_dir}/tmp/cookbooks/#{name}/recipes")
+      FileUtils.cp_r "#{pkg_dir}/tmp/cookbooks/#{name}/recipes", pkg_dir
     end
 
     run "cd #{pkg_dir}/tmp/;tar c#{tar_verbose}fz #{pkg_dir}/#{pkg_name}.new ."
