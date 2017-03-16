@@ -78,7 +78,7 @@ class ReleasedCookbook < Cookbook
 
   # ------------- /Interface Methods
   def source_dir
-    "#{pkg_dir}/tmp/cookbooks/#{name}"
+    "#{pkg_dir}"
   end
 
   def cleanup!
