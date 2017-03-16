@@ -18,15 +18,16 @@ class Cookbook
   attr_accessor :mofa_yml
   attr_accessor :mofa_yml_local
   attr_accessor :token
-
-  def self.create(cookbook_name_or_path, token)
+  attr_accessor :override_mofa_secrets
+  
+  def self.create(cookbook_name_or_path, token, override_mofa_secrets = nil)
     cookbook = nil
     begin
       case
         when cookbook_name_or_path.match(/@/)
           fail "Did not find released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path)
 
-          cookbook = ReleasedCookbook.new(cookbook_name_or_path)
+          cookbook = ReleasedCookbook.new(cookbook_name_or_path, override_mofa_secrets)
 
         else
           cookbook = SourceCookbook.new(cookbook_name_or_path)

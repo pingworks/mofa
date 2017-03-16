@@ -22,6 +22,7 @@ module Mofa
     method_option :runlist, :type => :string, :aliases => '-o'
     method_option :attributes, :type => :string, :aliases => '-j'
     method_option :service_hostlist_url, :type => :string
+    method_option :override_mofa_secrets, :type => :string, :aliases => '-S'
 
     def provision(cookbook_name_or_path)
       set_verbosity
@@ -34,7 +35,7 @@ module Mofa
       token = MofaCmd.generate_token
 
       hostlist = Hostlist.create(target_filter, options[:service_hostlist_url], options[:concrete_target])
-      cookbook = Cookbook.create(cookbook_name_or_path, token)
+      cookbook = Cookbook.create(cookbook_name_or_path, token, options[:override_mofa_secrets])
       runlist_map = RunlistMap.create(cookbook, hostlist, token, options[:runlist])
       attributes_map = AttributesMap.create(cookbook, hostlist, token, options[:runlist], options[:attributes])
 

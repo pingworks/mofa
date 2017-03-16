@@ -14,11 +14,12 @@ class ReleasedCookbook < Cookbook
     RestClient.head(url)
   end
 
-  def initialize(cookbook_name_or_path)
+  def initialize(cookbook_name_or_path, override_mofa_secrets = nil)
     super()
     nv = ReleasedCookbook.get_name_and_version(cookbook_name_or_path)
     @name = nv['name']
     @version = nv['version']
+    @override_mofa_secrets = override_mofa_secrets
   end
 
   # ------------- Interface Methods
@@ -62,6 +63,19 @@ class ReleasedCookbook < Cookbook
       FileUtils.cp_r "#{pkg_dir}/tmp/cookbooks/#{name}/recipes", pkg_dir
     end
 
+    # Sync in mofa_secrets
+    if override_mofa_secrets
+      run "rsync -avx #{override_mofa_secrets}/ #{pkg_dir}/tmp/cookbooks/#{name}/"
+    end
+
+    if File.exist?("#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.yml")
+      FileUtils.cp "#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.yml", pkg_dir
+    end
+
+    if File.exist?("#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.local.yml")
+      FileUtils.cp "#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.local.yml", pkg_dir
+    end
+
     run "cd #{pkg_dir}/tmp/;tar c#{tar_verbose}fz #{pkg_dir}/#{pkg_name}.new ."
     run "rm #{pkg_dir}/#{pkg_name}"
     run "mv #{pkg_dir}/#{pkg_name}.new #{pkg_dir}/#{pkg_name}"
@@ -69,11 +83,11 @@ class ReleasedCookbook < Cookbook
   end
 
   def load_mofa_yml
-    @mofa_yml = MofaYml.load_from_file(".mofa.yml", self)
+    @mofa_yml = MofaYml.load_from_file("#{pkg_dir}/.mofa.yml", self)
   end
 
   def load_mofa_yml_local
-    @mofa_yml_local = MofaYml.load_from_file(".mofa.local.yml", self)
+    @mofa_yml_local = MofaYml.load_from_file("#{pkg_dir}/.mofa.local.yml", self)
   end
 
   # ------------- /Interface Methods
