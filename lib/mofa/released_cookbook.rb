@@ -40,9 +40,7 @@ class ReleasedCookbook < Cookbook
   end
 
   def package
-
     tar_verbose = (Mofa::CLI::option_debug) ? 'v' : ''
-
     mkdir_p @pkg_dir
     say "Downloading released cookbook from: #{cookbooks_url} to #{pkg_dir}/#{pkg_name}..."
     File.open("#{pkg_dir}/#{pkg_name}", "wb") do |saved_file|
@@ -53,6 +51,17 @@ class ReleasedCookbook < Cookbook
     end
     mkdir_p "#{pkg_dir}/tmp"
     run "tar x#{tar_verbose}fz #{pkg_dir}/#{pkg_name} -C #{pkg_dir}/tmp/"
+
+    COOKBOOK_IGNORE.each do |remove_this|
+      if File.exists?("#{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}")
+        run "rm -rf #{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}"
+      end
+    end
+
+    run "cd #{pkg_dir}/tmp/;tar c#{tar_verbose}fz #{pkg_dir}/#{pkg_name}.new ."
+    run "rm #{pkg_dir}/#{pkg_name}"
+    run "mv #{pkg_dir}/#{pkg_name}.new #{pkg_dir}/#{pkg_name}"
+    run "rm -rf #{pkg_dir}/tmp/"
   end
 
   def load_mofa_yml
@@ -64,9 +73,8 @@ class ReleasedCookbook < Cookbook
   end
 
   # ------------- /Interface Methods
-
   def source_dir
-    pkg_dir
+    "#{pkg_dir}/tmp/cookbooks/#{name}"
   end
 
   def cleanup!
