@@ -65,16 +65,20 @@ class ReleasedCookbook < Cookbook
 
     # Sync in mofa_secrets
     if override_mofa_secrets
-      run "rsync -vr #{override_mofa_secrets}/ #{pkg_dir}/tmp/cookbooks/#{name}/"
+      run "rsync -vr #{override_mofa_secrets}/#{name}/ #{pkg_dir}/tmp/cookbooks/#{name}/"
     end
 
-    if File.exist?("#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.yml")
+    if File.file?("#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.yml")
       FileUtils.cp "#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.yml", pkg_dir
     end
 
-    if File.exist?("#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.local.yml")
+    if File.file?("#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.local.yml")
       FileUtils.cp "#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.local.yml", pkg_dir
     end
+
+    # reload mofa yml
+    load_mofa_yml
+    load_mofa_yml_local
 
     run "cd #{pkg_dir}/tmp/;tar c#{tar_verbose}fz #{pkg_dir}/#{pkg_name}.new ."
     run "rm #{pkg_dir}/#{pkg_name}"
