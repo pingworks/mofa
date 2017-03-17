@@ -198,7 +198,7 @@ class ProvisionCmd < MofaCmd
           snapshot_or_release = cookbook.is_a?(SourceCookbook) ? 'snapshot' : 'release'
           out = ssh_exec!(ssh, "sudo chown -R #{Mofa::Config.config['ssh_user']}.#{Mofa::Config.config['ssh_user']} #{solo_dir}")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo #{cookbook.pkg_name} | sudo tee /var/lib/mofa/last_cookbook_name")
+          out = ssh_exec!(ssh, "echo #{cookbook.name} | sudo tee /var/lib/mofa/last_cookbook_name")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "echo '#{snapshot_or_release}' | sudo tee /var/lib/mofa/last_cookbook_snapshot_or_release")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
@@ -206,7 +206,9 @@ class ProvisionCmd < MofaCmd
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "echo #{chef_solo_runs[hostname]['status']}| sudo tee /var/lib/mofa/last_status")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo '#!/bin/bash' | sudo tee /usr/bin/mofalog && echo 'cat #{solo_dir}/log' | sudo tee -a /usr/bin/mofa_log && sudo chmod 755 /usr/bin/mofa_log")
+          out = ssh_exec!(ssh, "echo '#!/bin/bash' | sudo tee /usr/bin/mofalog && echo 'cat /var/lib/mofa/last_run/log' | sudo tee -a /usr/bin/mofa_log && sudo chmod 755 /usr/bin/mofa_log")
+          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          out = ssh_exec!(ssh, "sudo chmod 755 #{solo_dir} && sudo chmod 644 #{solo_dir}/log")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "cat  #{solo_dir}/log | sudo tee -a /var/log/mofa.log")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
