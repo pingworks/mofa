@@ -206,9 +206,9 @@ class ProvisionCmd < MofaCmd
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "echo #{cookbook.version} | sudo tee /var/lib/mofa/last_cookbook_version")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo #{chef_solo_runs[hostname]['status']}| sudo tee /var/lib/mofa/last_status")
+          out = ssh_exec!(ssh, "echo #{chef_solo_runs[hostname]['status']} | sudo tee /var/lib/mofa/last_status")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo '#!/bin/bash' | sudo tee /usr/bin/mofa_log && echo 'cat /var/lib/mofa/last_run/log' | sudo tee -a /usr/bin/mofa_log && sudo chmod 755 /usr/bin/mofa_log")
+          out = ssh_exec!(ssh, "echo '#!/bin/bash' | sudo tee /usr/bin/mofa_log && echo 'cat #{solo_dir}/log' | sudo tee -a /usr/bin/mofa_log && sudo chmod 755 /usr/bin/mofa_log")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "date '+%Y-%m-%d %H:%M:%S' | sudo tee -a /var/lib/mofa/last_timestamp")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
