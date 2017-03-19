@@ -198,6 +198,8 @@ class ProvisionCmd < MofaCmd
           snapshot_or_release = cookbook.is_a?(SourceCookbook) ? 'snapshot' : 'release'
           out = ssh_exec!(ssh, "sudo chown -R #{Mofa::Config.config['ssh_user']}.#{Mofa::Config.config['ssh_user']} #{solo_dir}")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          out = ssh_exec!(ssh, '[ -d /var/lib/mofa ] || sudo mkdir /var/lib/mofa')
+          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "echo #{cookbook.name} | sudo tee /var/lib/mofa/last_cookbook_name")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "echo '#{snapshot_or_release}' | sudo tee /var/lib/mofa/last_cookbook_snapshot_or_release")
@@ -208,12 +210,13 @@ class ProvisionCmd < MofaCmd
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "echo '#!/bin/bash' | sudo tee /usr/bin/mofa_log && echo 'cat /var/lib/mofa/last_run/log' | sudo tee -a /usr/bin/mofa_log && sudo chmod 755 /usr/bin/mofa_log")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          out = ssh_exec!(ssh, "date '+%Y-%m-%d %H:%M:%S' | sudo tee -a /var/lib/mofa/last_timestamp")
+          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "sudo find #{solo_dir} -type d | xargs chmod 700")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "sudo find #{solo_dir} -type f | xargs chmod 600")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "date '+%Y-%m-%d %H:%M:%S' | sudo tee -a /var/lib/mofa/last_timestamp")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+
         end
       end
       at_least_one_chef_solo_run_failed = true unless chef_solo_runs[hostname]['status'] == 'SUCCESS'
