@@ -58,10 +58,10 @@ class ProvisionCmd < MofaCmd
 
   def prepare_host(hostname, host_index, solo_dir)
     puts
-    puts "----------------------------------------------------------------------"
-    puts "Chef-Solo on Host #{hostname} (#{host_index}/#{hostlist.list.length.to_s})"
-    puts "----------------------------------------------------------------------"
-    Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], :keys => [Mofa::Config.config['ssh_keyfile']], :port => Mofa::Config.config['ssh_port'], :verbose => :error) do |ssh|
+    puts '----------------------------------------------------------------------'
+    puts "Chef-Solo on Host #{hostname} (#{host_index}/#{hostlist.list.length})"
+    puts '----------------------------------------------------------------------'
+    Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], verbose: :error) do |ssh|
       puts "Remotely creating solo_dir \"#{solo_dir}\" on host #{hostname}"
       # remotely create the temp folder
       out = ssh_exec!(ssh, "[ -d #{solo_dir} ] || mkdir #{solo_dir}")
@@ -79,8 +79,8 @@ class ProvisionCmd < MofaCmd
   end
 
   def create_solo_rb(sftp, hostname, solo_dir)
-    puts "Remotely creating \"#{solo_dir}/solo.rb\""
-    sftp.file.open("#{solo_dir}/solo.rb", "w") do |file|
+    puts "Remotely creating \"#{solo_dir}/solo.rb\" on #{hostname}..."
+    sftp.file.open("#{solo_dir}/solo.rb", 'w') do |file|
       solo_rb = <<-"EOF"
     cookbook_path [ "#{solo_dir}/cookbooks" ]
     data_bag_path "#{solo_dir}/data_bags"
@@ -94,20 +94,20 @@ class ProvisionCmd < MofaCmd
   end
 
   def create_node_json(sftp, hostname, solo_dir, attributes_map)
-    puts "Remotely creating \"#{solo_dir}/node.json\""
+    puts "Remotely creating \"#{solo_dir}/node.json\" on #{hostname}..."
     node_json = {}
     node_json.store('run_list', runlist_map.mp[hostname])
     attributes_map.mp[hostname].each do |key, value|
       node_json.store(key, value)
     end
 
-    sftp.file.open("#{solo_dir}/node.json", "w") do |file|
+    sftp.file.open("#{solo_dir}/node.json", 'w') do |file|
       file.write(JSON.pretty_generate(node_json))
     end
   end
 
   def create_data_bags(sftp, hostname, solo_dir)
-    puts "Remotely creating data_bags items..."
+    puts "Remotely creating data_bags items on #{hostname}..."
     if File.directory?("#{cookbook.source_dir}/data_bags")
       Dir.entries("#{cookbook.source_dir}/data_bags/").each do |data_bag|
         next if data_bag =~ /^\.\.?$/
@@ -115,7 +115,7 @@ class ProvisionCmd < MofaCmd
         Dir.entries("#{cookbook.source_dir}/data_bags/#{data_bag}").select { |f| f.match(/\.json$/) }.each do |data_bag_item|
           puts "Uploading data_bag_item #{data_bag_item}... "
           sftp.upload!("#{cookbook.source_dir}/data_bags/#{data_bag}/#{data_bag_item}", "#{solo_dir}/data_bags/#{data_bag}/#{data_bag_item}")
-          puts "OK."
+          puts 'OK.'
         end
       end
     end
@@ -132,10 +132,10 @@ class ProvisionCmd < MofaCmd
     chef_solo_runs = {}
     host_index = 0
     hostlist.list.each do |hostname|
-      host_index = host_index + 1
+      host_index += 1
       chef_solo_runs.store(hostname, {})
 
-      unless (options.key?('ignore_ping') && options[:ignore_ping] == true)
+      unless options.key?('ignore_ping') && options[:ignore_ping] == true
         unless host_avail?(hostname)
           chef_solo_runs[hostname].store('status', 'UNAVAIL')
           chef_solo_runs[hostname].store('status_msg', "Host #{hostname} unreachable.")
@@ -146,8 +146,7 @@ class ProvisionCmd < MofaCmd
 
       prepare_host(hostname, host_index, solo_dir)
 
-      Net::SFTP.start(hostname, Mofa::Config.config['ssh_user'], :keys => [Mofa::Config.config['ssh_keyfile']], :port =>  Mofa::Config.config['ssh_port'], :verbose => :error) do |sftp|
-
+      Net::SFTP.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], verbose: :error) do |sftp|
         # remotely creating solo.rb
         create_solo_rb(sftp, hostname, solo_dir)
 
@@ -159,18 +158,17 @@ class ProvisionCmd < MofaCmd
 
         puts "Uploading Package #{cookbook.pkg_name}... "
         sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{solo_dir}/#{cookbook.pkg_name}")
-        puts "OK."
+        puts 'OK.'
 
         # Do it -> Execute the chef-solo run!
-        Net::SSH.start(hostname, Mofa::Config::config['ssh_user'], :keys => [Mofa::Config::config['ssh_keyfile']], :port =>  Mofa::Config.config['ssh_port'], :verbose => :error) do |ssh|
-
+        Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], verbose: :error) do |ssh|
           puts "Remotely unpacking Cookbook Package #{cookbook.pkg_name}... "
           out = ssh_exec!(ssh, "cd #{solo_dir}; tar xvfz #{cookbook.pkg_name}")
           if out[0] != 0
             puts "ERROR (#{out[0]}): #{out[2]}"
             puts out[1]
           else
-            puts "OK."
+            puts 'OK.'
           end
 
           puts "Remotely running chef-solo -c #{solo_dir}/solo.rb -j #{solo_dir}/node.json"
@@ -183,14 +181,14 @@ class ProvisionCmd < MofaCmd
             chef_solo_runs[hostname].store('status', 'FAIL')
             chef_solo_runs[hostname].store('status_msg', out[1])
           else
-            unless Mofa::CLI::option_debug
-              out = ssh_exec!(ssh, "sudo grep 'Chef Run' #{solo_dir}/log")
-              puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-              puts "Done."
-            else
+            if Mofa::CLI.option_debug
               out = ssh_exec!(ssh, "sudo cat #{solo_dir}/log")
               puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
               puts out[1]
+            else
+              out = ssh_exec!(ssh, "sudo grep 'Chef Run' #{solo_dir}/log")
+              puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+              puts 'Done.'
             end
             chef_solo_runs[hostname].store('status', 'SUCCESS')
             chef_solo_runs[hostname].store('status_msg', '')
@@ -208,15 +206,16 @@ class ProvisionCmd < MofaCmd
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "echo #{chef_solo_runs[hostname]['status']} | sudo tee /var/lib/mofa/last_status")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo '#!/bin/bash' | sudo tee /usr/bin/mofa_log && echo 'cat #{solo_dir}/log' | sudo tee -a /usr/bin/mofa_log && sudo chmod 755 /usr/bin/mofa_log")
+          out = ssh_exec!(ssh, "date '+%Y-%m-%d %H:%M:%S' | sudo tee /var/lib/mofa/last_timestamp")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "date '+%Y-%m-%d %H:%M:%S' | sudo tee -a /var/lib/mofa/last_timestamp")
+          out = ssh_exec!(ssh, "echo '#{solo_dir}/log' | sudo tee /var/lib/mofa/last_log")
+          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          out = ssh_exec!(ssh, "echo $(date '+%Y-%m-%d %H:%M:%S')': #{cookbook.name}@#{cookbook.version} (#{chef_solo_runs[hostname]['status']})' | sudo tee -a /var/lib/mofa/history")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "sudo find #{solo_dir} -type d | xargs chmod 700")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
           out = ssh_exec!(ssh, "sudo find #{solo_dir} -type f | xargs chmod 600")
           puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-
         end
       end
       at_least_one_chef_solo_run_failed = true unless chef_solo_runs[hostname]['status'] == 'SUCCESS'
@@ -224,10 +223,10 @@ class ProvisionCmd < MofaCmd
 
     # ------- print out report
     puts
-    puts "----------------------------------------------------------------------"
-    puts "Chef-Solo Run REPORT"
-    puts "----------------------------------------------------------------------"
-    puts "Chef-Solo has been run on #{chef_solo_runs.keys.length.to_s} hosts."
+    puts '----------------------------------------------------------------------'
+    puts 'Chef-Solo Run REPORT'
+    puts '----------------------------------------------------------------------'
+    puts "Chef-Solo has been run on #{chef_solo_runs.keys.length} hosts."
 
     chef_solo_runs.each do |hostname, content|
       status_msg = ''
@@ -235,18 +234,12 @@ class ProvisionCmd < MofaCmd
       puts "#{content['status']}: #{hostname} #{status_msg}"
     end
 
-    exit_code = 0
-    if at_least_one_chef_solo_run_failed
-      exit_code = 1
-    end
-
+    exit_code = at_least_one_chef_solo_run_failed ? 1 : 0
     puts "Exiting with exit code #{exit_code}."
 
     if exit_code != 0
       raise Thor::Error, "Chef client exited with non zero exit code: #{exit_code}"
     end
     exit_code
-
   end
-
 end
