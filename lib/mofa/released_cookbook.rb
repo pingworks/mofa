@@ -65,7 +65,11 @@ class ReleasedCookbook < Cookbook
 
     # Sync in mofa_secrets
     if override_mofa_secrets
-      run "rsync -vr #{override_mofa_secrets}/#{name}/ #{pkg_dir}/tmp/cookbooks/#{name}/"
+      if File.directory?("#{override_mofa_secrets}/#{name}/cookbooks")
+        run "rsync -vr #{override_mofa_secrets}/#{name}/cookbooks/ #{pkg_dir}/tmp/cookbooks/"
+      else
+        run "rsync -vr #{override_mofa_secrets}/#{name}/ #{pkg_dir}/tmp/cookbooks/#{name}/"
+      end
     end
 
     if File.file?("#{pkg_dir}/tmp/cookbooks/#{name}/.mofa.yml")

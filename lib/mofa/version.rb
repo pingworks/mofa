@@ -1,3 +1,3 @@
 module Mofa
-  VERSION = '0.3.40'
+  VERSION = '0.4.0'
 end
