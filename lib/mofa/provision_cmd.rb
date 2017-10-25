@@ -61,7 +61,7 @@ class ProvisionCmd < MofaCmd
     puts '----------------------------------------------------------------------'
     puts "Chef-Solo on Host #{hostname} (#{host_index}/#{hostlist.list.length})"
     puts '----------------------------------------------------------------------'
-    Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], verbose: :error) do |ssh|
+    Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], use_agent: false, verbose: :error) do |ssh|
       puts "Remotely creating solo_dir \"#{solo_dir}\" on host #{hostname}"
       # remotely create the temp folder
       out = ssh_exec!(ssh, "[ -d #{solo_dir} ] || mkdir #{solo_dir}")
@@ -146,7 +146,7 @@ class ProvisionCmd < MofaCmd
 
       prepare_host(hostname, host_index, solo_dir)
 
-      Net::SFTP.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], verbose: :error) do |sftp|
+      Net::SFTP.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], use_agent: false, verbose: :error) do |sftp|
         # remotely creating solo.rb
         create_solo_rb(sftp, hostname, solo_dir)
 
@@ -161,7 +161,7 @@ class ProvisionCmd < MofaCmd
         puts 'OK.'
 
         # Do it -> Execute the chef-solo run!
-        Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], verbose: :error) do |ssh|
+        Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], use_agent: false, verbose: :error) do |ssh|
           puts "Remotely unpacking Cookbook Package #{cookbook.pkg_name}... "
           out = ssh_exec!(ssh, "cd #{solo_dir}; tar xvfz #{cookbook.pkg_name}")
           if out[0] != 0
