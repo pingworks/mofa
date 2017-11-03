@@ -122,6 +122,7 @@ class SourceCookbook < Cookbook
     inside source_dir do
 
       mkdir_p "#{pkg_dir}/tmp"
+      run "which tar"
       run "tar x#{tar_verbose}fz #{pkg_dir}/#{pkg_name} -C #{pkg_dir}/tmp/"
 
       COOKBOOK_IGNORE.each do |remove_this|

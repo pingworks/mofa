@@ -84,14 +84,14 @@ class ProvisionCmd < MofaCmd
       solo_rb = <<-"EOF"
     cookbook_path [ "#{solo_dir}/cookbooks" ]
     data_bag_path "#{solo_dir}/data_bags"
-    log_level :info
-    log_location "#{solo_dir}/log"
     verify_api_cert true
       EOF
 
       file.write(solo_rb)
     end
   end
+# log_level :info
+# log_location "#{solo_dir}/log"
 
   def create_node_json(sftp, hostname, solo_dir, attributes_map)
     puts "Remotely creating \"#{solo_dir}/node.json\" on #{hostname}..."
@@ -160,67 +160,83 @@ class ProvisionCmd < MofaCmd
         sftp.upload!("#{cookbook.pkg_dir}/#{cookbook.pkg_name}", "#{solo_dir}/#{cookbook.pkg_name}")
         puts 'OK.'
 
-        # Do it -> Execute the chef-solo run!
-        Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], use_agent: false, verbose: :error) do |ssh|
-          puts "Remotely unpacking Cookbook Package #{cookbook.pkg_name}... "
-          out = ssh_exec!(ssh, "cd #{solo_dir}; tar xvfz #{cookbook.pkg_name}")
-          if out[0] != 0
-            puts "ERROR (#{out[0]}): #{out[2]}"
-            puts out[1]
-          else
-            puts 'OK.'
-          end
-
-          puts "Remotely running chef-solo -c #{solo_dir}/solo.rb -j #{solo_dir}/node.json"
-          out = ssh_exec!(ssh, "sudo chef-solo -c #{solo_dir}/solo.rb -j #{solo_dir}/node.json")
-          if out[0] != 0
-            puts "ERROR (#{out[0]}): #{out[2]}"
-            out = ssh_exec!(ssh, "sudo cat #{solo_dir}/log")
-            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-            puts out[1]
-            chef_solo_runs[hostname].store('status', 'FAIL')
-            chef_solo_runs[hostname].store('status_msg', out[1])
-          else
-            if Mofa::CLI.option_debug
-              out = ssh_exec!(ssh, "sudo cat #{solo_dir}/log")
-              puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-              puts out[1]
-            else
-              out = ssh_exec!(ssh, "sudo grep 'Chef Run' #{solo_dir}/log")
-              puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-              puts 'Done.'
+        File.open("#{cookbook.pkg_dir}/log", 'w') do |log_file|
+          # Do it -> Execute the chef-solo run!
+          begin
+            begin
+              Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], use_agent: false, verbose: :error) do |ssh|
+                puts "Remotely unpacking Cookbook Package #{cookbook.pkg_name}... "
+                ssh.exec!("cd #{solo_dir}; tar xvfz #{cookbook.pkg_name}") do |_ch, _stream, line|
+                  puts line if Mofa::CLI.option_debug
+                  log_file.write(line) if Mofa::CLI.option_debug
+                end
+                puts 'OK.'
+              end
+            rescue StandardError => e
+              status_msg = "ERROR: Unpacking cookbook archive on remote host #{hostname} failed (#{e.message})!"
+              chef_solo_runs[hostname].store('status', 'FAIL')
+              chef_solo_runs[hostname].store('status_msg', status_msg)
+              puts status_msg
+              log_file.write(status_msg)
+              raise e
             end
-            chef_solo_runs[hostname].store('status', 'SUCCESS')
-            chef_solo_runs[hostname].store('status_msg', '')
+            begin
+              Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], use_agent: false, verbose: :error) do |ssh|
+                puts "Remotely running chef-solo -c #{solo_dir}/solo.rb -j #{solo_dir}/node.json"
+                chef_run_exit_code = 0
+                ssh.exec!("sudo chef-solo -c #{solo_dir}/solo.rb -j #{solo_dir}/node.json") do |_ch, _stream, line|
+                  puts line if Mofa::CLI.option_verbose || Mofa::CLI.option_debug
+                  log_file.write(line)
+                  chef_run_exit_code = 1 if line =~ /Chef run process exited unsuccessfully/
+                end
+                raise 'Chef run process exited unsuccessfully' if chef_run_exit_code != 0
+                chef_solo_runs[hostname].store('status', 'SUCCESS')
+                chef_solo_runs[hostname].store('status_msg', '')
+                puts 'Chef-solo run was a SUCCESS!'
+                log_file.write('chef-solo run: SUCCESS')
+              end
+            rescue StandardError => e
+              status_msg = "ERROR: Chef-solo run on #{hostname} FAILED! (#{e.message})"
+              chef_solo_runs[hostname].store('status', 'FAIL')
+              chef_solo_runs[hostname].store('status_msg', status_msg)
+              puts status_msg
+              log_file.write(status_msg)
+              raise e
+            end
+          rescue StandardError => e
+            log_file.write('chef-solo run: FAIL')
+            puts "ERRORS detected while provisioning #{hostname} (#{e.message})."
           end
-          snapshot_or_release = cookbook.is_a?(SourceCookbook) ? 'snapshot' : 'release'
-          out = ssh_exec!(ssh, "sudo chown -R #{Mofa::Config.config['ssh_user']}.#{Mofa::Config.config['ssh_user']} #{solo_dir}")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, '[ -d /var/lib/mofa ] || sudo mkdir /var/lib/mofa')
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo #{cookbook.name} | sudo tee /var/lib/mofa/last_cookbook_name")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo '#{snapshot_or_release}' | sudo tee /var/lib/mofa/last_cookbook_snapshot_or_release")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo #{cookbook.version} | sudo tee /var/lib/mofa/last_cookbook_version")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo #{chef_solo_runs[hostname]['status']} | sudo tee /var/lib/mofa/last_status")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "date '+%Y-%m-%d %H:%M:%S' | sudo tee /var/lib/mofa/last_timestamp")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo '#{solo_dir}/log' | sudo tee /var/lib/mofa/last_log")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "echo $(date '+%Y-%m-%d %H:%M:%S')': #{cookbook.name}@#{cookbook.version} (#{chef_solo_runs[hostname]['status']})' | sudo tee -a /var/lib/mofa/history")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "sudo find #{solo_dir} -type d | xargs chmod 700")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
-          out = ssh_exec!(ssh, "sudo find #{solo_dir} -type f | xargs chmod 600")
-          puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: Mofa::Config.config['ssh_port'], use_agent: false, verbose: :error) do |ssh|
+            snapshot_or_release = cookbook.is_a?(SourceCookbook) ? 'snapshot' : 'release'
+            out = ssh_exec!(ssh, "sudo chown -R #{Mofa::Config.config['ssh_user']}.#{Mofa::Config.config['ssh_user']} #{solo_dir}")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, '[ -d /var/lib/mofa ] || sudo mkdir /var/lib/mofa')
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, "echo #{cookbook.name} | sudo tee /var/lib/mofa/last_cookbook_name")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, "echo '#{snapshot_or_release}' | sudo tee /var/lib/mofa/last_cookbook_snapshot_or_release")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, "echo #{cookbook.version} | sudo tee /var/lib/mofa/last_cookbook_version")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, "echo #{chef_solo_runs[hostname]['status']} | sudo tee /var/lib/mofa/last_status")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, "date '+%Y-%m-%d %H:%M:%S' | sudo tee /var/lib/mofa/last_timestamp")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, "echo '#{solo_dir}/log' | sudo tee /var/lib/mofa/last_log")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, "echo $(date '+%Y-%m-%d %H:%M:%S')': #{cookbook.name}@#{cookbook.version} (#{chef_solo_runs[hostname]['status']})' | sudo tee -a /var/lib/mofa/history")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, "sudo find #{solo_dir} -type d | xargs chmod 700")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+            out = ssh_exec!(ssh, "sudo find #{solo_dir} -type f | xargs chmod 600")
+            puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
+          end
         end
+        at_least_one_chef_solo_run_failed = true unless chef_solo_runs[hostname]['status'] == 'SUCCESS'
+        sftp.upload!("#{cookbook.pkg_dir}/log", "#{solo_dir}/log")
       end
-      at_least_one_chef_solo_run_failed = true unless chef_solo_runs[hostname]['status'] == 'SUCCESS'
     end
-
     # ------- print out report
     puts
     puts '----------------------------------------------------------------------'
