@@ -49,6 +49,13 @@ class SourceCookbook < Cookbook
   end
 
   def load_mofa_yml_local
+    if override_mofa_secrets
+      say "-S Switch found - checking for .mofa.local.yml..."
+      if File.file?("#{override_mofa_secrets}/#{name}/.mofa.local.yml")
+        say ".mofa.local.yml found at #{override_mofa_secrets}/#{name}/.mofa.local.yml - copying it into source dir..."
+        FileUtils.cp "#{override_mofa_secrets}/#{name}/.mofa.local.yml", "#{source_dir}/.mofa.local.yml"
+      end
+    end
     @mofa_yml_local = MofaYml.load_from_file("#{source_dir}/.mofa.local.yml", self)
   end
 
@@ -137,14 +144,6 @@ class SourceCookbook < Cookbook
       if override_mofa_secrets
         if File.directory?("#{override_mofa_secrets}/#{name}/cookbooks")
           run "rsync -vr #{override_mofa_secrets}/#{name}/cookbooks/ cookbooks/"
-          if File.file?("#{override_mofa_secrets}/#{name}/.mofa.local.yml")
-            FileUtils.cp "#{override_mofa_secrets}/#{name}/.mofa.local.yml", "cookbooks/#{name}/"
-          end
-          if File.file?("#{override_mofa_secrets}/#{name}/.mofa.yml")
-            FileUtils.cp "#{override_mofa_secrets}/#{name}/.mofa.yml", "cookbooks/#{name}/"
-          end
-        else
-          run "rsync -vr #{override_mofa_secrets}/#{name}/ cookbooks/#{name}/"
         end
       end
     end
