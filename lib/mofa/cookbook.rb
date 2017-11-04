@@ -19,7 +19,7 @@ class Cookbook
   attr_accessor :mofa_yml_local
   attr_accessor :token
   attr_accessor :override_mofa_secrets
-  
+
   def self.create(cookbook_name_or_path, token, override_mofa_secrets = nil)
     cookbook = nil
     begin
@@ -30,7 +30,7 @@ class Cookbook
           cookbook = ReleasedCookbook.new(cookbook_name_or_path, override_mofa_secrets)
 
         else
-          cookbook = SourceCookbook.new(cookbook_name_or_path)
+          cookbook = SourceCookbook.new(cookbook_name_or_path, override_mofa_secrets)
       end
     rescue RuntimeError => e
       raise "Cookbook not found/detected: " + e.message

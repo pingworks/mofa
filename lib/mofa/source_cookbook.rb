@@ -1,7 +1,7 @@
 class SourceCookbook < Cookbook
   COOKBOOK_IGNORE = %w(.mofa .idea .kitchen .vagrant .bundle test .git)
 
-  def initialize(cookbook_name_or_path)
+  def initialize(cookbook_name_or_path, override_mofa_secrets = nil)
     super()
     path = Pathname.new(cookbook_name_or_path)
 
@@ -9,6 +9,8 @@ class SourceCookbook < Cookbook
     @source_uri = "file://#{path.realpath}"
 
     say "source_dir=#{source_dir}"
+
+    @override_mofa_secrets = override_mofa_secrets
 
     autodetect_name
     autodetect_version
@@ -127,6 +129,22 @@ class SourceCookbook < Cookbook
       COOKBOOK_IGNORE.each do |remove_this|
         if File.exists?("tmp/cookbooks/#{name}/#{remove_this}")
           run "rm -rf tmp/cookbooks/#{name}/#{remove_this}"
+        end
+      end
+    end
+    inside "#{pkg_dir}/tmp" do
+      # Sync in mofa_secrets
+      if override_mofa_secrets
+        if File.directory?("#{override_mofa_secrets}/#{name}/cookbooks")
+          run "rsync -vr #{override_mofa_secrets}/#{name}/cookbooks/ cookbooks/"
+          if File.file?("#{override_mofa_secrets}/#{name}/.mofa.local.yml")
+            FileUtils.cp "#{override_mofa_secrets}/#{name}/.mofa.local.yml", "cookbooks/#{name}/"
+          end
+          if File.file?("#{override_mofa_secrets}/#{name}/.mofa.yml")
+            FileUtils.cp "#{override_mofa_secrets}/#{name}/.mofa.yml", "cookbooks/#{name}/"
+          end
+        else
+          run "rsync -vr #{override_mofa_secrets}/#{name}/ cookbooks/#{name}/"
         end
       end
     end
