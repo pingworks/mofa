@@ -26,4 +26,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "net-ping"
   s.add_runtime_dependency "user_config"
   s.add_runtime_dependency "chronic"
+  s.add_runtime_dependency "win32-security"
 end

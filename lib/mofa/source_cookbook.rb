@@ -1,5 +1,5 @@
 class SourceCookbook < Cookbook
-  COOKBOOK_IGNORE=%w(.mofa .idea .kitchen .vagrant .bundle test .git)
+  COOKBOOK_IGNORE = %w(.mofa .idea .kitchen .vagrant .bundle test .git)
 
   def initialize(cookbook_name_or_path)
     super()
@@ -21,7 +21,8 @@ class SourceCookbook < Cookbook
     fail "Folder #{source_dir} is not a Cookbook Folder!" unless cookbook_folder?(source_dir)
 
     @pkg_name ||= "#{name}_#{version}-SNAPSHOT.tar.gz"
-    @pkg_dir = "#{Mofa::Config.config['tmp_dir']}/.mofa/#{token}"
+    @pkg_dir = "#{source_dir}/.mofa/#{token}"
+
     set_cookbooks_url
   end
 
@@ -119,23 +120,23 @@ class SourceCookbook < Cookbook
 
     tar_verbose = (Mofa::CLI::option_debug) ? 'v' : ''
 
-    inside source_dir do
-
-      mkdir_p "#{pkg_dir}/tmp"
-      run "which tar"
-      run "tar x#{tar_verbose}fz #{pkg_dir}/#{pkg_name} -C #{pkg_dir}/tmp/"
+    inside pkg_dir do
+      empty_directory 'tmp'
+      run "tar x#{tar_verbose}fz #{pkg_name} -C tmp/"
 
       COOKBOOK_IGNORE.each do |remove_this|
-        if File.exists?("#{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}")
-          run "rm -rf #{pkg_dir}/tmp/cookbooks/#{name}/#{remove_this}"
+        if File.exists?("tmp/cookbooks/#{name}/#{remove_this}")
+          run "rm -rf tmp/cookbooks/#{name}/#{remove_this}"
         end
       end
-
-      run "cd #{pkg_dir}/tmp/;tar c#{tar_verbose}fz #{pkg_dir}/#{pkg_name}.new ."
-      run "rm #{pkg_dir}/#{pkg_name}"
-      run "mv #{pkg_dir}/#{pkg_name}.new #{pkg_dir}/#{pkg_name}"
-      run "rm -rf #{pkg_dir}/tmp/"
-
+    end
+    inside "#{pkg_dir}/tmp" do
+      run "tar c#{tar_verbose}fz ../#{pkg_name}.new ."
+    end
+    inside pkg_dir do
+      run "rm #{pkg_name}"
+      run "mv #{pkg_name}.new #{pkg_name}"
+      run 'rm -rf tmp/'
     end
 
     ok
