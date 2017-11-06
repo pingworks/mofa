@@ -142,8 +142,9 @@ class SourceCookbook < Cookbook
     inside "#{pkg_dir}/tmp" do
       # Sync in mofa_secrets
       if override_mofa_secrets
-        if File.directory?("#{override_mofa_secrets}/#{name}/cookbooks")
-          run "rsync -vr #{override_mofa_secrets}/#{name}/cookbooks/ cookbooks/"
+        path_translated = @override_mofa_secrets.sub(/^([a-zA-Z]):/,"/\1/")
+        if File.directory?("#{path_translated}/#{name}/cookbooks")
+          run "rsync -vr #{path_translated}/#{name}/cookbooks/ cookbooks/"
         end
       end
     end
