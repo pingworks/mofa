@@ -44,9 +44,10 @@ class RunlistMap
     # and so on
     hostlist.list.each do |hostname|
       cookbook.recipes.each do |recipe|
-        recipe_regex = "^#{recipe}[0-9]*\."
+        recipe_regex = "^#{recipe}[0-9]*\\\."
         if hostname.match(recipe_regex)
           @mp.store(hostname, "recipe[#{cookbook.name}::#{recipe}]")
+          break
         end
       end
     end
