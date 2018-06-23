@@ -54,6 +54,7 @@ module Mofa
 
     desc 'upload <cookbook>', 'package & upload cookbook into binrepo'
     method_option :binrepo_host, :type => :string
+    method_option :binrepo_sshport, :type => :string
     method_option :binrepo_ssh_user, :type => :string
     method_option :binrepo_ssh_keyfile, :type => :string
 
@@ -68,7 +69,8 @@ module Mofa
       cmd = UploadCmd.new(token, cookbook)
 
       cmd.prepare
-      cmd.execute
+      # FIXME: bring in the ssh-port in a different way
+      cmd.execute(22)
       cmd.cleanup
     end
 
