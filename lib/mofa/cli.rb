@@ -19,6 +19,7 @@ module Mofa
     method_option :ignore_ping, :type => :boolean, :aliases => '-p'
     method_option :target, :type => :string, :aliases => '-t'
     method_option :concrete_target, :type => :string, :aliases => '-T'
+    method_option :sshport, :type => :string, :aliases => '-P'
     method_option :runlist, :type => :string, :aliases => '-o'
     method_option :attributes, :type => :string, :aliases => '-j'
     method_option :service_hostlist_url, :type => :string
@@ -47,7 +48,7 @@ module Mofa
       cmd.options = options
 
       cmd.prepare
-      cmd.execute
+      cmd.execute(options[:sshport])
       cmd.cleanup
     end
 

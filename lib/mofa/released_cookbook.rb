@@ -30,7 +30,7 @@ class ReleasedCookbook < Cookbook
     set_cookbooks_url
   end
 
-  def execute#
+  def execute
     package
   end
 
