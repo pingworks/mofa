@@ -15,7 +15,7 @@ class UploadCmd < MofaCmd
     cookbook.prepare
   end
 
-  def execute(_sshport)
+  def execute(_ssh_port)
     cookbook.execute
     upload_cookbook_pkg
   end

@@ -21,7 +21,7 @@ class MofaCmd
   end
 
   # @abstract
-  def execute(_sshport)
+  def execute(_ssh_port)
     raise RuntimeError, "must be implemented"
   end
 
