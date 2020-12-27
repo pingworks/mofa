@@ -47,10 +47,16 @@ class AttributesMap
       elsif value.is_a?(Array)
         new_attr_hash[key] = []
         value.each do |value_item|
-          new_attr_hash[key].push(value_item.gsub(Regexp.new(Regexp.escape(placeholder)), content))
+          if value_item.is_a?(Hash)
+            new_attr_hash[key] = deep_parse(value, placeholder, content)
+          else
+            new_attr_hash[key].push(value_item.gsub(Regexp.new(Regexp.escape(placeholder)), content))
+          end
         end
       else
-        new_attr_hash[key] = value.gsub(Regexp.new(Regexp.escape(placeholder)), content)
+        if value
+          new_attr_hash[key] = value.gsub(Regexp.new(Regexp.escape(placeholder)), content)
+        end
       end
     end
     new_attr_hash

@@ -65,16 +65,20 @@ class ReleasedCookbook < Cookbook
 
     # Sync in mofa_secrets
     if override_mofa_secrets
-      if File.directory?("#{override_mofa_secrets}/#{name}/cookbooks")
-        run "rsync -vr #{override_mofa_secrets}/#{name}/cookbooks/ #{pkg_dir}/tmp/cookbooks/"
-        if File.file?("#{override_mofa_secrets}/#{name}/.mofa.local.yml")
-          FileUtils.cp "#{override_mofa_secrets}/#{name}/.mofa.local.yml", "#{pkg_dir}/tmp/cookbooks/#{name}/"
-        end
-        if File.file?("#{override_mofa_secrets}/#{name}/.mofa.yml")
-          FileUtils.cp "#{override_mofa_secrets}/#{name}/.mofa.yml", "#{pkg_dir}/tmp/cookbooks/#{name}/"
+      if File.directory?("#{override_mofa_secrets}/#{name}")
+        if File.directory?("#{override_mofa_secrets}/#{name}/cookbooks")
+          run "rsync -vr #{override_mofa_secrets}/#{name}/cookbooks/ #{pkg_dir}/tmp/cookbooks/"
+          if File.file?("#{override_mofa_secrets}/#{name}/.mofa.local.yml")
+            FileUtils.cp "#{override_mofa_secrets}/#{name}/.mofa.local.yml", "#{pkg_dir}/tmp/cookbooks/#{name}/"
+          end
+          if File.file?("#{override_mofa_secrets}/#{name}/.mofa.yml")
+            FileUtils.cp "#{override_mofa_secrets}/#{name}/.mofa.yml", "#{pkg_dir}/tmp/cookbooks/#{name}/"
+          end
+        else
+          run "rsync -vr #{override_mofa_secrets}/#{name}/ #{pkg_dir}/tmp/cookbooks/#{name}/"
         end
       else
-        run "rsync -vr #{override_mofa_secrets}/#{name}/ #{pkg_dir}/tmp/cookbooks/#{name}/"
+        say "Skipping non-existant mofa-secrets folder #{override_mofa_secrets}/#{name}"
       end
     end
 
