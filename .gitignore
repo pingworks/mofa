@@ -7,4 +7,6 @@ pkg/*
 
 example_hostlist.json
 
+vendor/bundle
+
 
