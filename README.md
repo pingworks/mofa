@@ -52,7 +52,7 @@ Before you can start using mofa please create a config file:
 
 # local Development
 
-    $ git clone https://github.com/hybris/mofa.git
+    $ git clone https://github.com/pingworks/mofa.git
     $ cd mofa
     $ bundle install
     $ cd ../somewhere_chef-env_some_cookbook

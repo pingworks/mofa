@@ -1,0 +1,39 @@
+# global mofa settings
+
+# Admin User Account that should be used for all mofa tasks.
+# The user has to be able to login passwordless
+# and has tohave passwordless sudo permissions.
+ssh_user: sccchef
+ssh_keyfile: ~/.ssh/id_rsa_sccchef
+
+# where to build tmporary cookbook packages and so on
+tmp_dir: /var/tmp
+
+# A REST-Webservice that returns a list of hosts that are potentially
+# manageable with this mofa.
+service_hostlist_url: file:///opt/workshopbox/etc/hostlist.json
+service_hostlist_default_filter: "localhost"
+#service_hostlist_api_key: xyz
+
+# The cookbook architectural pattern should becodified by following
+# a coonaming schema:
+# * Cookbooks beginning with "env_*" are Envrionment Cookbooks
+# * Cookbooks haven a prefix like "<organisation_name>_*" are
+#   so-called Wrapper Cookbooks
+# * Cookbooks having a "base_" Prefix are Base Cookbooks
+
+cookbook_type_indicator:
+  env: "^env_.*"
+  wrapper: "^(scc_|fos_|allcop_).*"
+  base: ".*_base$"
+
+# Binrepo for released cookbooks
+binrepo_base_url: 'https://berks-api/cookbooks'
+
+# Releasing into binrepo
+binrepo_host: berks-api
+binrepo_ssh_user: berks
+binrepo_ssh_port: 22
+binrepo_ssh_keyfile: /id_rsa
+binrepo_import_dir: /data/cookbooks/import
+
