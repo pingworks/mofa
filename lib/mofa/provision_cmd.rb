@@ -14,7 +14,7 @@ class ProvisionCmd < MofaCmd
     cookbook.prepare
   end
 
-  def execute(ssh_port = 22)
+  def execute(ssh_port, ssh_user, ssh_keyfile)
     cookbook.execute
 
     hostlist.retrieve
@@ -30,7 +30,7 @@ class ProvisionCmd < MofaCmd
 
     puts "Hostlist after runlist filtering: #{hostlist.list.inspect}"
 
-    exit_code = run_chef_solo_on_hosts(ssh_port)
+    exit_code = run_chef_solo_on_hosts(ssh_port, ssh_user, ssh_keyfile)
 
     exit_code
   end
@@ -56,12 +56,12 @@ class ProvisionCmd < MofaCmd
     host_available
   end
 
-  def prepare_host(hostname, host_index, solo_dir, ssh_port = Mofa::Config.config['ssh_port'] )
+  def prepare_host(hostname, host_index, solo_dir, ssh_port, ssh_user, ssh_keyfile)
     puts
     puts '----------------------------------------------------------------------'
     puts "Chef-Solo on Host #{hostname} (#{host_index}/#{hostlist.list.length})"
     puts '----------------------------------------------------------------------'
-    Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: ssh_port, use_agent: false, verbose: :error) do |ssh|
+    Net::SSH.start(hostname, ssh_user, keys: [ssh_keyfile], port: ssh_port, use_agent: false, verbose: :error) do |ssh|
       puts "Remotely creating solo_dir \"#{solo_dir}\" on host #{hostname}"
       # remotely create the temp folder
       out = ssh_exec!(ssh, "[ -d #{solo_dir} ] || mkdir #{solo_dir}")
@@ -90,8 +90,6 @@ class ProvisionCmd < MofaCmd
       file.write(solo_rb)
     end
   end
-# log_level :info
-# log_location "#{solo_dir}/log"
 
   def create_node_json(sftp, hostname, solo_dir, attributes_map)
     puts "Remotely creating \"#{solo_dir}/node.json\" on #{hostname}..."
@@ -121,13 +119,13 @@ class ProvisionCmd < MofaCmd
     end
   end
 
-  def run_chef_solo_on_hosts(ssh_port = Mofa::Config.config['ssh_port'])
+  def run_chef_solo_on_hosts(ssh_port, ssh_user, ssh_keyfile)
     time = Time.new
     # Create a temp working dir on the target host
     solo_dir = '/var/tmp/' + time.strftime('%Y-%m-%d_%H%M%S')
     puts
     puts 'Chef-Solo Run started at ' + time.strftime('%Y-%m-%d %H:%M:%S')
-    puts "Will use ssh_user #{Mofa::Config.config['ssh_user']}, ssh_port #{ssh_port} and ssh_key_file #{Mofa::Config.config['ssh_keyfile']}"
+    puts "Will use ssh_user '#{ssh_user}', ssh_port '#{ssh_port}' and ssh_keyfile '#{ssh_keyfile}'"
     at_least_one_chef_solo_run_failed = false
     chef_solo_runs = {}
     host_index = 0
@@ -144,9 +142,9 @@ class ProvisionCmd < MofaCmd
         end
       end
 
-      prepare_host(hostname, host_index, solo_dir, ssh_port)
+      prepare_host(hostname, host_index, solo_dir, ssh_port, ssh_user, ssh_keyfile)
 
-      Net::SFTP.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: ssh_port, use_agent: false, verbose: :error) do |sftp|
+      Net::SFTP.start(hostname, ssh_user, keys: [ssh_keyfile], port: ssh_port, use_agent: false, verbose: :error) do |sftp|
         # remotely creating solo.rb
         create_solo_rb(sftp, hostname, solo_dir)
 
@@ -164,7 +162,7 @@ class ProvisionCmd < MofaCmd
           # Do it -> Execute the chef-solo run!
           begin
             begin
-              Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: ssh_port, use_agent: false, verbose: :error) do |ssh|
+              Net::SSH.start(hostname, ssh_user, keys: [ssh_keyfile], port: ssh_port, use_agent: false, verbose: :error) do |ssh|
                 puts "Remotely unpacking Cookbook Package #{cookbook.pkg_name}... "
                 ssh.exec!("cd #{solo_dir}; tar xvfz #{cookbook.pkg_name}") do |_ch, _stream, line|
                   puts line if Mofa::CLI.option_debug
@@ -181,7 +179,7 @@ class ProvisionCmd < MofaCmd
               raise e
             end
             begin
-              Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: ssh_port, use_agent: false, verbose: :error) do |ssh|
+              Net::SSH.start(hostname, ssh_user, keys: [ssh_keyfile], port: ssh_port, use_agent: false, verbose: :error) do |ssh|
                 puts "Remotely running chef-solo -c #{solo_dir}/solo.rb -j #{solo_dir}/node.json"
                 chef_run_exit_code = 0
                 ssh.exec!("sudo chef-solo -c #{solo_dir}/solo.rb -j #{solo_dir}/node.json") do |_ch, _stream, line|
@@ -207,7 +205,7 @@ class ProvisionCmd < MofaCmd
             log_file.write('chef-solo run: FAIL')
             puts "ERRORS detected while provisioning #{hostname} (#{e.message})."
           end
-          Net::SSH.start(hostname, Mofa::Config.config['ssh_user'], keys: [Mofa::Config.config['ssh_keyfile']], port: ssh_port, use_agent: false, verbose: :error) do |ssh|
+          Net::SSH.start(hostname, ssh_user, keys: [ssh_keyfile], port: ssh_port, use_agent: false, verbose: :error) do |ssh|
             snapshot_or_release = cookbook.is_a?(SourceCookbook) ? 'snapshot' : 'release'
             out = ssh_exec!(ssh, "sudo chown -R #{Mofa::Config.config['ssh_user']}.#{Mofa::Config.config['ssh_user']} #{solo_dir}")
             puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0

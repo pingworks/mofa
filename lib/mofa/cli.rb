@@ -16,14 +16,17 @@ module Mofa
     class_option :debug, :type => :boolean, :aliases => '-vv', :desc => 'be very vebose'
 
     desc 'provision <cookbook>', 'provisions Targethost(s) using a given cookbook.'
-    method_option :ignore_ping, :type => :boolean, :aliases => '-p'
+    method_option :ignore_ping, :type => :boolean, :aliases => '-P'
     method_option :target, :type => :string, :aliases => '-t'
     method_option :concrete_target, :type => :string, :aliases => '-T'
-    method_option :sshport, :type => :string, :aliases => '-P'
     method_option :runlist, :type => :string, :aliases => '-o'
     method_option :attributes, :type => :string, :aliases => '-j'
     method_option :service_hostlist_url, :type => :string
     method_option :override_mofa_secrets, :type => :string, :aliases => '-S'
+    method_option :ssh_port, :type => :string, :aliases => '-p', :default => '22'
+    method_option :ssh_user, :type => :string, :aliases => '-u', :default => 'sccchef'
+    method_option :ssh_keyfile, :type => :string, :aliases => '-i',  :default => '~/.ssh/id_rsa_sccchef'
+    method_option :tmp_dir, :type => :string, :aliases => '-w', :default => '~/tmp/mofa'
 
     def provision(cookbook_name_or_path)
       set_verbosity
@@ -31,7 +34,6 @@ module Mofa
       cookbook_name_or_path ||= '.'
 
       target_filter = options[:target]
-      #target_filter ||= Mofa::Config.config['profiles']['default']['target']
 
       token = MofaCmd.generate_token
 
@@ -48,13 +50,13 @@ module Mofa
       cmd.options = options
 
       cmd.prepare
-      cmd.execute(options[:sshport])
+      cmd.execute(options[:ssh_port], options[:ssh_user], options[:ssh_keyfile])
       cmd.cleanup
     end
 
     desc 'upload <cookbook>', 'package & upload cookbook into binrepo'
     method_option :binrepo_host, :type => :string
-    method_option :binrepo_sshport, :type => :string
+    method_option :binrepo_ssh_port, :type => :string
     method_option :binrepo_ssh_user, :type => :string
     method_option :binrepo_ssh_keyfile, :type => :string
 
@@ -78,29 +80,6 @@ module Mofa
 
     def version
       puts VERSION
-    end
-
-    desc 'config', 'prints out mofa config.'
-
-    def config
-      config_print
-    end
-
-    desc 'setup', 'setup initial configuration'
-
-    def setup
-      set_verbosity
-
-      case
-        when !File.exists?("#{ENV['HOME']}/.mofa/config.yml")
-          begin
-            config_create
-          end until config_valid?
-        else
-          begin
-            config_edit
-          end until config_valid?
-      end
     end
 
     def self.option_verbose
@@ -129,33 +108,6 @@ module Mofa
 
     def error(detail)
       say detail, :red
-    end
-
-    def config_create
-      say 'Creating a new mofa config (~/.mofa/config.yml)...'
-
-      say '- not implemented yet -'
-
-    end
-
-    def config_edit
-      say 'Editing mofa config (~/.mofa/config.yml)...'
-
-      say '- not implemented yet -'
-
-    end
-
-    def config_print
-      say 'Mofa Config (~/.mofa/config.yml):'
-
-      say '- not implemented yet -'
-
-    end
-
-    def config_valid?
-      say 'Validating Mofa config (~/.mofa/config.yml)...'
-      say '- not implemented yet -'
-      true
     end
 
     def self.exit_on_failure?

@@ -26,7 +26,7 @@ class ReleasedCookbook < Cookbook
 
   def prepare
     @pkg_name ||= "#{name}_#{version}-full.tar.gz"
-    @pkg_dir = "#{Mofa::Config.config['tmp_dir']}/.mofa/#{token}"
+    @pkg_dir = "#{Mofa::CLI::option_tmp_dir}/.mofa/#{token}"
     set_cookbooks_url
   end
 
@@ -114,11 +114,11 @@ class ReleasedCookbook < Cookbook
   end
 
   def cleanup!
-    unless (Dir.entries("#{Mofa::Config.config['tmp_dir']}/.mofa") - %w{ . .. }).empty?
-      say "Removing content of folder #{Mofa::Config.config['tmp_dir']}/.mofa"
-      run "rm -r #{Mofa::Config.config['tmp_dir']}/.mofa/*"
+    unless (Dir.entries("#{Mofa::CLI::option_tmp_dir}/.mofa") - %w{ . .. }).empty?
+      say "Removing content of folder #{Mofa::CLI::option_tmp_dir}/.mofa"
+      run "rm -r #{Mofa::CLI::option_tmp_dir}/.mofa/*"
     else
-      say "Folder #{Mofa::Config.config['tmp_dir']}/.mofa is (already) clean."
+      say "Folder #{Mofa::CLI::option_tmp_dir}/.mofa is (already) clean."
     end
   end
 
