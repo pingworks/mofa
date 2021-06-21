@@ -9,7 +9,7 @@ class ReleasedCookbook < Cookbook
 
   def self.exists?(cookbook_name_or_path)
     nv = get_name_and_version(cookbook_name_or_path)
-    url = "#{Mofa::Config.config['binrepo_base_url']}/#{nv['name']}/#{nv['version']}/#{nv['name']}_#{nv['version']}-full.tar.gz"
+    url = "#{Mofa::CLI::binrepo_base_url}/#{nv['name']}/#{nv['version']}/#{nv['name']}_#{nv['version']}-full.tar.gz"
     puts "Checking if cookbook exists: #{url}"
     RestClient.head(url)
   end
@@ -124,7 +124,7 @@ class ReleasedCookbook < Cookbook
 
   def set_cookbooks_url
     say 'Using remote URI as cookbooks_url: '
-    @cookbooks_url = "#{Mofa::Config.config['binrepo_base_url']}/#{@name}/#{@version}/#{@name}_#{@version}-full.tar.gz"
+    @cookbooks_url = "#{Mofa::CLI::binrepo_base_url}/#{@name}/#{@version}/#{@name}_#{@version}-full.tar.gz"
     say "#{@cookbooks_url}"
   end
 

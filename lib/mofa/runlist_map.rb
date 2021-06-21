@@ -33,7 +33,7 @@ class RunlistMap
       end
     else
       hostlist.list.each do |hostname|
-        @mp.store(hostname,  option_runlist)
+        @mp.store(hostname, option_runlist)
       end
     end
   end
@@ -51,7 +51,6 @@ class RunlistMap
         end
       end
     end
-
   end
 
   def set_default_runlist_for_every_host
@@ -62,5 +61,4 @@ class RunlistMap
       end
     end
   end
-
 end

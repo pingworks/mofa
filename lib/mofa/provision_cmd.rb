@@ -207,7 +207,7 @@ class ProvisionCmd < MofaCmd
           end
           Net::SSH.start(hostname, ssh_user, keys: [ssh_keyfile], port: ssh_port, use_agent: false, verbose: :error) do |ssh|
             snapshot_or_release = cookbook.is_a?(SourceCookbook) ? 'snapshot' : 'release'
-            out = ssh_exec!(ssh, "sudo chown -R #{Mofa::Config.config['ssh_user']}.#{Mofa::Config.config['ssh_user']} #{solo_dir}")
+            out = ssh_exec!(ssh, "sudo chown -R #{ssh_user}.#{ssh_user} #{solo_dir}")
             puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0
             out = ssh_exec!(ssh, '[ -d /var/lib/mofa ] || sudo mkdir /var/lib/mofa')
             puts "ERROR (#{out[0]}): #{out[2]}" if out[0] != 0

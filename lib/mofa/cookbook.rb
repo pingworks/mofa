@@ -24,16 +24,16 @@ class Cookbook
     cookbook = nil
     begin
       case
-        when cookbook_name_or_path.match(/@/)
-          fail "Did not find released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path)
+      when cookbook_name_or_path.match(/@/)
+        raise "Did not find released Cookbook #{cookbook_name_or_path}!" unless ReleasedCookbook.exists?(cookbook_name_or_path)
 
-          cookbook = ReleasedCookbook.new(cookbook_name_or_path, override_mofa_secrets)
+        cookbook = ReleasedCookbook.new(cookbook_name_or_path, override_mofa_secrets)
 
-        else
-          cookbook = SourceCookbook.new(cookbook_name_or_path, override_mofa_secrets)
+      else
+        cookbook = SourceCookbook.new(cookbook_name_or_path, override_mofa_secrets)
       end
     rescue RuntimeError => e
-      raise "Cookbook not found/detected: " + e.message
+      raise 'Cookbook not found/detected: ' + e.message
     end
     cookbook.token = token
     cookbook.autodetect_type
@@ -43,32 +43,29 @@ class Cookbook
   end
 
   def autodetect_type
-    env_indicator = Mofa::Config.config['cookbook_type_indicator']['env']
-    wrapper_indicator = Mofa::Config.config['cookbook_type_indicator']['wrapper']
-    base_indicator = Mofa::Config.config['cookbook_type_indicator']['base']
+    env_indicator = '^env_.*'
+    base_indicator = '.*_base$'
 
-    say "Autodetecting Cookbook Architectural Type... "
+    say 'Autodetecting Cookbook Architectural Type...'
 
     case
-      when @name.match(env_indicator)
-        @type = 'env'
-      when @name.match(base_indicator)
-        @type = 'base'
-      when @name.match(wrapper_indicator)
-        @type = 'wrapper'
-      else
-        @type = 'application'
+    when @name.match(env_indicator)
+      @type = 'env'
+    when @name.match(base_indicator)
+      @type = 'base'
+    else
+      @type = 'application'
     end
     say "#{type.capitalize} Cookbook"
   end
 
-  def say(message = "", color = nil, force_new_line = (message.to_s !~ /( |\t)$/))
+  def say(message = '', color = nil, force_new_line = (message.to_s !~ /( |\t)$/))
     color ||= :green
     super
   end
 
   def ok(detail=nil)
-    text = detail ? "OK, #{detail}." : "OK."
+    text = detail ? "OK, #{detail}." : 'OK.'
     say text, :green
   end
 
@@ -86,6 +83,4 @@ class Cookbook
     exit_code = super(cmd, args.merge(:verbose => verbose))
     fail "Failed to run #{cmd.inspect}!" unless exit_code == true
   end
-
-
 end

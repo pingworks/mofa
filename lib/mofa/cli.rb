@@ -17,7 +17,6 @@ module Mofa
 
     desc 'provision <cookbook>', 'provisions Targethost(s) using a given cookbook.'
     method_option :ignore_ping, :type => :boolean, :aliases => '-P'
-    method_option :target, :type => :string, :aliases => '-t'
     method_option :concrete_target, :type => :string, :aliases => '-T'
     method_option :runlist, :type => :string, :aliases => '-o'
     method_option :attributes, :type => :string, :aliases => '-j'
@@ -27,17 +26,15 @@ module Mofa
     method_option :ssh_user, :type => :string, :aliases => '-u', :default => 'sccchef'
     method_option :ssh_keyfile, :type => :string, :aliases => '-i',  :default => '~/.ssh/id_rsa_sccchef'
     method_option :tmp_dir, :type => :string, :aliases => '-w', :default => '~/tmp/mofa'
-
+    method_option :binrepo_base_url, :type => :string, :aliases => '-r'
+    
     def provision(cookbook_name_or_path)
       set_verbosity
-
       cookbook_name_or_path ||= '.'
-
-      target_filter = options[:target]
 
       token = MofaCmd.generate_token
 
-      hostlist = Hostlist.create(target_filter, options[:service_hostlist_url], options[:concrete_target])
+      hostlist = Hostlist.create(options[:concrete_target])
       cookbook = Cookbook.create(cookbook_name_or_path, token, options[:override_mofa_secrets])
       runlist_map = RunlistMap.create(cookbook, hostlist, token, options[:runlist])
       attributes_map = AttributesMap.create(cookbook, hostlist, token, options[:runlist], options[:attributes])
