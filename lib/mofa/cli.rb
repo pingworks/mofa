@@ -24,10 +24,10 @@ module Mofa
     method_option :override_mofa_secrets, :type => :string, :aliases => '-S'
     method_option :ssh_port, :type => :string, :aliases => '-p', :default => '22'
     method_option :ssh_user, :type => :string, :aliases => '-u', :default => 'sccchef'
-    method_option :ssh_keyfile, :type => :string, :aliases => '-i',  :default => '~/.ssh/id_rsa_sccchef'
+    method_option :ssh_keyfile, :type => :string, :aliases => '-i', :default => '~/.ssh/id_rsa_sccchef'
     method_option :tmp_dir, :type => :string, :aliases => '-w', :default => '~/tmp/mofa'
     method_option :binrepo_base_url, :type => :string, :aliases => '-r'
-    
+
     def provision(cookbook_name_or_path)
       set_verbosity
       cookbook_name_or_path ||= '.'
@@ -87,29 +87,29 @@ module Mofa
       @@option_debug
     end
 
+    def self.exit_on_failure?
+      true
+    end
+
     private
+
     # Private methods go in here
     def set_verbosity
-      @@option_debug = (options[:debug]) ? true : false
-      @@option_verbose = (options[:verbose] || options[:debug]) ? true : false
+      @@option_debug = options[:debug] ? true : false
+      @@option_verbose = options[:verbose] || options[:debug] ? true : false
     end
 
     def em(text)
       shell.set_color(text, nil, true)
     end
 
-    def ok(detail=nil)
-      text = detail ? "OK, #{detail}." : "OK."
+    def ok(detail = nil)
+      text = detail ? "OK, #{detail}." : 'OK.'
       say text, :green
     end
 
     def error(detail)
       say detail, :red
     end
-
-    def self.exit_on_failure?
-      true
-    end
-
   end
 end

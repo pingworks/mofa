@@ -82,5 +82,4 @@ class AttributesMap
 
     new_attr_hash
   end
-
 end
